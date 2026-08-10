@@ -2,48 +2,70 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
+   protected $fillable = [
+    'nom', 'prenom', 'email', 'password',
+    'telephone', 'ville', 'pays', 'cin_recto', 'cin_verso', 'selfie', 'photo', 'role',
+    'adresse', 'contact_urgence', 'biographie',
+    'experience', 'type_logement', 'animaux_existants',
+    'description', 'services_offerts', 'tarif',
+    'note_moyenne', 'est_verifie', 'statut_validation',
+'needs_review', 'review_reason',
+    'niveau',
+];
+
+    protected $hidden = ['password', 'remember_token'];
+
+    protected $casts = [
+        'services_offerts' => 'array',
+        'animaux_existants' => 'boolean',
+        'est_verifie' => 'boolean',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    public function animals() {
+        return $this->hasMany(Animal::class);
+    }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+    public function posts() {
+        return $this->hasMany(Post::class);
+    }
+
+    public function annonces() {
+        return $this->hasMany(AnnonceAdoption::class);
+    }
+
+    public function candidatures() {
+        return $this->hasMany(Candidature::class);
+    }
+
+    public function messagesEnvoyes() {
+        return $this->hasMany(Message::class, 'expediteur_id');
+    }
+
+    public function messagesRecus() {
+        return $this->hasMany(Message::class, 'destinataire_id');
+    }
+
+    public function reservationsProprietaire() {
+        return $this->hasMany(Reservation::class, 'proprietaire_id');
+    }
+
+    public function reservationsPrestataire() {
+        return $this->hasMany(Reservation::class, 'prestataire_id');
+    }
+
+    public function evenements() {
+        return $this->hasMany(Evenement::class);
+    }
+
+    public function notifications() {
+        return $this->hasMany(Notification::class, 'destinataire_id');
     }
 }
