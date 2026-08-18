@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class ReservationController extends Controller
@@ -41,6 +42,14 @@ class ReservationController extends Controller
             'montant' => $request->montant,
             'notes' => $request->notes,
             'statut' => 'en_attente',
+        ]);
+
+        // Notifier le prestataire de la nouvelle demande
+        Notification::create([
+            'destinataire_id' => $reservation->prestataire_id,
+            'type' => 'reservation',
+            'message' => 'Nouvelle réservation pour : ' . $reservation->type_service,
+            'est_lue' => false,
         ]);
 
         return response()->json($reservation->load('animal', 'prestataire', 'service'), 201);

@@ -8,6 +8,8 @@ class Reservation extends Model
         'type_service', 'ville', 'date_debut', 'date_fin',
         'montant', 'statut', 'notes',
         'adresse_depart', 'adresse_arrivee',
+        'statut',
+        'statut_trajet',
         'client_nom', 'client_prenom', 'client_telephone', 'client_adresse',
         'responsabilite_acceptee_le', 'sante_lue_le',
     ];

@@ -172,6 +172,7 @@ export default function Animals() {
         photo: '', preuve_propriete: '', type_preuve: '',
         a_probleme_sante: false, probleme_sante: '', traitement: '', consignes_sante: '',
         veterinaire: '', contact_urgence_sante: '', sante_certifiee: false,
+        taille: '', poids: '',
     });
 
     useEffect(() => { fetchAnimals(); }, []);
@@ -219,6 +220,7 @@ export default function Animals() {
         if (!validateNomAnimal(form.nom)) errors.nom = true;
         if (form.race.trim() && !validateNomAnimal(form.race)) errors.race = true;
         if (!form.espece) errors.espece = true;
+        if (form.espece === 'autre' && !form.espece_autre?.trim()) errors.espece_autre = true;
         if (!form.sexe) errors.sexe = true;
 
         const dateCheck = validateDateNaissance(form.date_naissance, form.espece);
@@ -271,14 +273,15 @@ export default function Animals() {
         try {
             const dataToSend = {
                 nom: form.nom,
-                espece: form.espece,
-                race: form.race.trim(),
+espece: form.espece === 'autre' ? form.espece_autre.trim() : form.espece,                race: form.race.trim(),
                 sexe: form.sexe,
                 date_naissance: form.date_naissance,
                 caractere: form.caractere,
                 photo: photoUrl || form.photo,
                 preuve_propriete: preuveUrl || form.preuve_propriete,
                 type_preuve: form.type_preuve,
+                taille: form.taille || null,
+                poids: form.poids || null,
                 a_probleme_sante: form.a_probleme_sante,
                 probleme_sante: form.a_probleme_sante ? form.probleme_sante : null,
                 traitement: form.a_probleme_sante ? form.traitement : null,
@@ -314,6 +317,8 @@ export default function Animals() {
             photo: animal.photo || '',
             preuve_propriete: animal.preuve_propriete || '',
             type_preuve: animal.type_preuve || '',
+            taille: animal.taille || '',
+            poids: animal.poids || '',
             a_probleme_sante: !!animal.a_probleme_sante,
             probleme_sante: animal.probleme_sante || '',
             traitement: animal.traitement || '',
@@ -384,12 +389,12 @@ export default function Animals() {
                     <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
 
                         {/* Espèce — placée avant la photo car nécessaire pour l'analyse */}
-                        <div>
+                       <div>
                             <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Espèce *</label>
                             <select value={form.espece}
                                 onChange={e => {
                                     const nouvelleEspece = e.target.value;
-                                    setForm({...form, espece: nouvelleEspece, date_naissance: '', race: ''});
+                                    setForm({...form, espece: nouvelleEspece, date_naissance: '', race: '', espece_autre: ''});
                                     // Re-analyser la photo si elle est déjà présente
                                     if (photoUrl) lancerVerifPhoto(photoUrl, nouvelleEspece);
                                 }}
@@ -398,6 +403,18 @@ export default function Animals() {
                                     <option key={e.value} value={e.value}>{e.label}</option>
                                 ))}
                             </select>
+
+                            {/* Saisie libre si "Autre" */}
+                            {form.espece === 'autre' && (
+                                <div style={{marginTop: '10px'}}>
+                                    <input type="text" value={form.espece_autre || ''}
+                                        onChange={e => setForm({...form, espece_autre: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, '')})}
+                                        onBlur={() => touch('espece_autre')}
+                                        style={inputStyle(touched.espece_autre && !form.espece_autre?.trim())}
+                                        placeholder="Précisez l'espèce (ex: Furet, Cochon, Chèvre...)"/>
+                                    {touched.espece_autre && !form.espece_autre?.trim() && <FieldError message="Veuillez préciser l'espèce"/>}
+                                </div>
+                            )}
                         </div>
 
                         {/* Photo */}
@@ -599,7 +616,28 @@ export default function Animals() {
                                 style={{...inputStyle(false), border: '1.5px solid #e0d5d0', resize: 'none'}}
                                 rows={3} placeholder="Ex: Joueur, affectueux, calme..."/>
                         </div>
+{/* Taille */}
+                        <div>
+                            <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Taille</label>
+                            <div style={{display: 'flex', gap: '10px'}}>
+                                {[{v: 'petit', l: '🐭 Petit'}, {v: 'moyen', l: '🐕 Moyen'}, {v: 'grand', l: '🐎 Grand'}].map(t => (
+                                    <button key={t.v} type="button"
+                                        onClick={() => setForm({...form, taille: t.v})}
+                                        style={{flex: 1, padding: '10px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: form.taille === t.v ? C.primary : C.beige, color: form.taille === t.v ? 'white' : C.brown, fontWeight: '600', fontSize: '14px'}}>
+                                        {t.l}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
+                        {/* Poids */}
+                        <div>
+                            <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Poids (kg)</label>
+                            <input type="number" step="0.1" min="0" value={form.poids}
+                                onChange={e => setForm({...form, poids: e.target.value})}
+                                style={{...inputStyle(false), border: '1.5px solid #e0d5d0'}}
+                                placeholder="Ex: 12.5"/>
+                        </div>
                         {/* ÉTAT DE SANTÉ */}
                         <div style={{background: '#FFF8F5', border: '1.5px solid #f0d5cd', borderRadius: '14px', padding: '16px'}}>
                             <label style={{display: 'block', fontSize: '15px', fontWeight: '700', color: C.brown, marginBottom: '6px'}}>

@@ -34,6 +34,14 @@ const UNITES_PAR_TYPE = {
 };
 
 const DEFAULT_UNITES = [{ value: '30min', label: '/ 30min' }, { value: '1h', label: '/ 1h' }];
+const ESPECES = [
+    { value: 'chien', label: 'Chien', icon: '🐕' },
+    { value: 'chat', label: 'Chat', icon: '🐈' },
+    { value: 'oiseau', label: 'Oiseau', icon: '🐦' },
+    { value: 'reptile', label: 'Reptile', icon: '🦎' },
+    { value: 'rongeur', label: 'Rongeur', icon: '🐹' },
+    { value: 'autre', label: 'Autre', icon: '🐾' },
+];
 
 export default function MesServices() {
     const [services, setServices] = useState([]);
@@ -42,9 +50,9 @@ export default function MesServices() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [touched, setTouched] = useState({});
-    const [form, setForm] = useState({
+   const [form, setForm] = useState({
         type: '', titre: '', description: '', tarif: '', unite: '30min',
-        photos: [], photo_principale: ''
+        photos: [], photo_principale: '', especes_acceptees: []
     });
 
 
@@ -83,8 +91,7 @@ useEffect(() => {                                    // ← ICI, dedans
     const touchAll = (fields) => setTouched(prev => ({...prev, ...fields.reduce((acc, f) => ({...acc, [f]: true}), {})}));
 
     const resetForm = () => {
-        setForm({ type: '', titre: '', description: '', tarif: '', unite: '30min', photos: [], photo_principale: '' });
-        setEditingId(null);
+setForm({ type: '', titre: '', description: '', tarif: '', unite: '30min', photos: [], photo_principale: '', especes_acceptees: [] });        setEditingId(null);
         setShowForm(false);
         setError('');
         setTouched({});
@@ -133,6 +140,7 @@ useEffect(() => {                                    // ← ICI, dedans
             unite: service.unite || '30min',
             photos: service.photos || [],
             photo_principale: service.photo_principale || '',
+            especes_acceptees: service.especes_acceptees || [],
         });
         setEditingId(service.id);
         setShowForm(true);
@@ -235,7 +243,39 @@ useEffect(() => {                                    // ← ICI, dedans
                                 style={{...inputStyle, resize: 'none'}} rows={4}
                                 placeholder="Décrivez votre service, votre expérience, vos disponibilités..."/>
                         </div>
-
+{/* Espèces acceptées */}
+                        <div>
+                            <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>
+                                🐾 Animaux acceptés <span style={{color: '#aaa', fontWeight: '400'}}>(cochez les espèces)</span>
+                            </label>
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px'}}>
+                                {ESPECES.map(esp => {
+                                    const coche = form.especes_acceptees.includes(esp.value);
+                                    return (
+                                        <button key={esp.value} type="button"
+                                            onClick={() => {
+                                                const liste = coche
+                                                    ? form.especes_acceptees.filter(x => x !== esp.value)
+                                                    : [...form.especes_acceptees, esp.value];
+                                                setForm({...form, especes_acceptees: liste});
+                                            }}
+                                            style={{
+                                                padding: '12px 8px', borderRadius: '12px',
+                                                border: coche ? `2px solid ${C.primary}` : '2px solid #e0d5d0',
+                                                cursor: 'pointer',
+                                                background: coche ? C.primary : 'white',
+                                                color: coche ? 'white' : C.brown,
+                                                fontWeight: '600', fontSize: '13px',
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'
+                                            }}>
+                                            <span style={{fontSize: '20px'}}>{esp.icon}</span>
+                                            {esp.label}
+                                            {coche && <span style={{fontSize: '11px'}}>✓</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                         {/* Tarif + Unité */}
                         <div style={{display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px'}}>
                             <div>

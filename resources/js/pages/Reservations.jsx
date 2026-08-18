@@ -25,23 +25,29 @@ export default function Reservations() {
     const [activeTab, setActiveTab] = useState('all');
 
     // Avis
-    const [avisResa, setAvisResa] = useState(null);   // réservation en cours de notation
+    const [avisResa, setAvisResa] = useState(null);
     const [note, setNote] = useState(0);
     const [commentaire, setCommentaire] = useState('');
     const [envoiAvis, setEnvoiAvis] = useState(false);
-    const [avisDeposes, setAvisDeposes] = useState([]); // ids de réservations déjà notées
+    const [avisDeposes, setAvisDeposes] = useState([]);
 
     const isPrestataire = user?.role === 'prestataire';
 
-    useEffect(() => { fetchReservations(); }, []);
+    useEffect(() => {
+        fetchReservations();
+        const interval = setInterval(() => fetchReservations(true), 5000);
+        return () => clearInterval(interval);
+    }, []);
 
-    const fetchReservations = async () => {
-        setLoading(true);
+    const fetchReservations = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const res = await api.get('/reservations');
             setReservations(res.data);
-        } catch (err) { console.error(err); }
-        setLoading(false);
+        } catch (err) {
+            console.error(err);
+        }
+        if (!silent) setLoading(false);
     };
 
     const handleAccepter = async (id) => {
@@ -57,6 +63,23 @@ export default function Reservations() {
             fetchReservations();
         } catch (err) {
             notify.error('Erreur lors de l\'acceptation');
+        }
+    };
+
+    const handleStatutTrajet = async (id, statutTrajet, label) => {
+        const confirmed = await confirmAction(`${label} ?`, {
+            title: 'Suivi du trajet',
+            confirmLabel: 'Confirmer',
+            cancelLabel: 'Annuler',
+        });
+        if (!confirmed) return;
+        try {
+            await api.put(`/reservations/${id}`, { statut_trajet: statutTrajet });
+            notify.success(`Trajet : ${label}`);
+            fetchReservations();
+        } catch (err) {
+            console.error(err);
+            notify.error('Erreur lors de la mise à jour du trajet');
         }
     };
 
@@ -135,8 +158,14 @@ export default function Reservations() {
             setAvisDeposes([...avisDeposes, avisResa.id]);
             setAvisResa(null);
         } catch (err) {
-            const msg = err.response?.data?.message || 'Erreur lors de l\'envoi de l\'avis';
-            notify.error(msg);
+            const brut = err.response?.data?.message || '';
+            if (err.response?.status === 409 || brut.includes('Duplicate') || brut.includes('unique')) {
+                notify.error('Vous avez déjà laissé un avis pour cette réservation');
+                setAvisDeposes([...avisDeposes, avisResa.id]);
+                setAvisResa(null);
+            } else {
+                notify.error('Erreur lors de l\'envoi de l\'avis');
+            }
         }
         setEnvoiAvis(false);
     };
@@ -317,7 +346,7 @@ export default function Reservations() {
                                     </div>
                                 )}
 
-                                {/* Contacter */}
+                                {/* Contacter (client) */}
                                 {!isPrestataire && r.statut === 'acceptee' && (
                                     <button onClick={async () => {
                                         try {
@@ -333,6 +362,53 @@ export default function Reservations() {
                                     </button>
                                 )}
 
+                                {/* Client : suivi du trajet taxi */}
+                                {!isPrestataire && r.statut === 'acceptee' && r.type_service === 'taxi' && (
+                                    <div style={{marginTop: '12px'}}>
+                                        {(() => {
+                                            const etapes = [
+                                                { key: 'en_route', icon: '🚕', label: 'Chauffeur en route' },
+                                                { key: 'arrive', icon: '📍', label: 'Arrivé au point de départ' },
+                                                { key: 'termine', icon: '🏁', label: 'Trajet terminé' },
+                                            ];
+                                            const rang = { en_route: 1, arrive: 2, termine: 3 };
+                                            const actuel = rang[r.statut_trajet] || 0;
+                                            return (
+                                                <div style={{background: C.beige, borderRadius: '12px', padding: '14px'}}>
+                                                    <p style={{color: C.brown, fontWeight: '700', fontSize: '13px', margin: '0 0 10px'}}>🚕 Suivi du trajet</p>
+                                                    {etapes.map((e, i) => {
+                                                        const fait = actuel >= (i + 1);
+                                                        return (
+                                                            <div key={e.key} style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', opacity: fait ? 1 : 0.4}}>
+                                                                <span style={{fontSize: '18px'}}>{fait ? e.icon : '⏳'}</span>
+                                                                <span style={{color: fait ? '#2e7d32' : '#999', fontWeight: fait ? '700' : '500', fontSize: '13px'}}>{e.label}</span>
+                                                                {fait && <span style={{marginLeft: 'auto', color: '#2e7d32', fontSize: '14px'}}>✓</span>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {actuel === 0 && (
+                                                        <p style={{color: '#999', fontSize: '12px', margin: '4px 0 0', fontStyle: 'italic'}}>En attente du démarrage par le chauffeur…</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {r.statut_trajet === 'termine' && (
+                                            avisDeposes.includes(r.id) ? (
+                                                <div style={{background: '#E8F5E9', borderRadius: '10px', padding: '10px 14px', textAlign: 'center', marginTop: '12px'}}>
+                                                    <p style={{color: '#2e7d32', fontWeight: '700', fontSize: '13px', margin: 0}}>⭐ Merci, votre avis a été enregistré</p>
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => ouvrirAvis(r)}
+                                                    style={{width: '100%', background: '#FFB800', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '12px'}}>
+                                                    ✅ Confirmer & noter le chauffeur
+                                                </button>
+                                            )
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Actions prestataire quand accepté */}
                                 {isPrestataire && r.statut === 'acceptee' && (
                                     <>
                                         <button onClick={async () => {
@@ -348,10 +424,40 @@ export default function Reservations() {
                                             💬 Contacter le client
                                         </button>
 
-                                        <button onClick={() => handleTerminer(r.id)}
-                                            style={{width: '100%', background: '#E8756A', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
-                                            🏁 Marquer comme terminée
-                                        </button>
+                                        {r.type_service !== 'taxi' && (
+                                            <button onClick={() => handleTerminer(r.id)}
+                                                style={{width: '100%', background: '#E8756A', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
+                                                🏁 Marquer comme terminée
+                                            </button>
+                                        )}
+
+                                        {r.type_service === 'taxi' && (
+                                            <>
+                                                {(!r.statut_trajet || r.statut_trajet === 'en_attente') && (
+                                                    <button onClick={() => handleStatutTrajet(r.id, 'en_route', 'Trajet démarré')}
+                                                        style={{width: '100%', background: '#4A2C24', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
+                                                        🚕 Démarrer le trajet
+                                                    </button>
+                                                )}
+                                                {r.statut_trajet === 'en_route' && (
+                                                    <button onClick={() => handleStatutTrajet(r.id, 'arrive', 'Arrivé à destination')}
+                                                        style={{width: '100%', background: '#4A2C24', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
+                                                        📍 Je suis arrivé
+                                                    </button>
+                                                )}
+                                                {r.statut_trajet === 'arrive' && (
+                                                    <button onClick={() => handleStatutTrajet(r.id, 'termine', 'Trajet terminé')}
+                                                        style={{width: '100%', background: '#2e7d32', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
+                                                        🏁 Trajet terminé
+                                                    </button>
+                                                )}
+                                                {r.statut_trajet === 'termine' && (
+                                                    <div style={{background: '#E8F5E9', borderRadius: '10px', padding: '10px 14px', textAlign: 'center', marginTop: '8px'}}>
+                                                        <p style={{color: '#2e7d32', fontWeight: '700', fontSize: '13px', margin: 0}}>✅ Trajet terminé</p>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
                                     </>
                                 )}
 

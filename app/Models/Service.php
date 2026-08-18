@@ -7,13 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     protected $fillable = [
-        'user_id', 'type', 'titre', 'description', 'tarif', 'unite', 'photos', 'photo_principale', 'actif'
-    ];
+        'user_id', 'type', 'titre', 'description', 'tarif', 'unite', 'photos', 'photo_principale', 'actif', 'especes_acceptees'];
 
     protected $casts = [
         'photos' => 'array',
         'actif' => 'boolean',
+        'especes_acceptees' => 'array',
+       
     ];
+  
+
 
     public function prestataire()
     {

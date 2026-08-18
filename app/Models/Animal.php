@@ -11,6 +11,7 @@ protected $fillable = [
         'sexe', 'date_naissance', 'photo',
         'preuve_propriete', 'type_preuve', 'statut_preuve',
         'caractere', 'statut',
+        'taille', 'poids',
         'a_probleme_sante', 'probleme_sante', 'traitement',
         'consignes_sante', 'veterinaire', 'contact_urgence_sante',
         'sante_certifiee_le',

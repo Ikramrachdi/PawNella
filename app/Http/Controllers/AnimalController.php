@@ -38,6 +38,8 @@ class AnimalController extends Controller
             'photo' => 'nullable|string',
             'preuve_propriete' => 'nullable|string',
             'type_preuve' => 'nullable|string',
+            'taille' => 'nullable|string',
+            'poids' => 'nullable|numeric',
         ], $this->reglesSante()));
 
         $data['user_id'] = auth()->id();
@@ -81,7 +83,10 @@ class AnimalController extends Controller
             'photo' => 'nullable|string',
             'preuve_propriete' => 'nullable|string',
             'type_preuve' => 'nullable|string',
+            'taille' => 'nullable|string',
+            'poids' => 'nullable|numeric',
         ], $this->reglesSante()));
+        
 
         // Si le document change, la validation repart de zéro
         if (array_key_exists('preuve_propriete', $data)

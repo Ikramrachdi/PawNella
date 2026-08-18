@@ -55,9 +55,11 @@ class ServiceController extends Controller
             'unite' => 'nullable|string',
             'photos' => 'nullable|array',
             'photo_principale' => 'nullable|string',
+            'photo_principale' => 'nullable|string',
+            'especes_acceptees' => 'nullable|array',
         ]);
 
-        $service = Service::create([
+       $service = Service::create([
             'user_id' => $user->id,
             'type' => $request->type,
             'titre' => $request->titre,
@@ -66,6 +68,7 @@ class ServiceController extends Controller
             'unite' => $request->unite ?? '30min',
             'photos' => $request->photos ?? [],
             'photo_principale' => $request->photo_principale,
+            'especes_acceptees' => $request->especes_acceptees ?? [],
             'actif' => true,
         ]);
 
@@ -84,8 +87,7 @@ class ServiceController extends Controller
         }
 
         $service->update($request->only([
-            'type', 'titre', 'description', 'tarif', 'unite', 'photos', 'photo_principale', 'actif'
-        ]));
+'type', 'titre', 'description', 'tarif', 'unite', 'photos', 'photo_principale', 'actif', 'especes_acceptees'        ]));
 
         return response()->json($service);
     }

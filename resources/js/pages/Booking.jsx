@@ -6,6 +6,7 @@ import { useNotification } from '../context/NotificationContext';
 import { validatePhone, validateDateHeure, dateMinToday, heureMinPourDate } from '../utils/validation';
 import { ErrorBanner, FieldError, FieldSuccess, fieldBorder } from '../components/FormError';
 import AddressInput from '../components/AddressInput';
+import { calculerTrajetDepuisAdresses } from '../utils/taxiDistance';
 
 const C = {
     primary: '#E8756A',
@@ -40,6 +41,8 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
     const [adresseArrivee, setAdresseArrivee] = useState('');
     const [confirmed, setConfirmed] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [taxiInfo, setTaxiInfo] = useState(null);      // { distance, duree, prix }
+    const [calculTaxi, setCalculTaxi] = useState(false);  // en cours de calcul
     const [coordonnees, setCoordonnees] = useState({
         nom: user?.nom || '',
         prenom: user?.prenom || '',
@@ -153,15 +156,17 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
         return true;
     };
 
-    const handleConfirm = async () => {
-        // Dernière vérification avant envoi (l'utilisateur a pu rester longtemps sur la page)
-        const check = validateDateHeure(date, heure);
-        if (!check.valid) {
-            notify.error(check.message);
+   const handleConfirm = async () => {
+       
+      // Taxi : le prix doit avoir été calculé (sinon montant faux)
+        const estTaxi = String(selectedService?.type || '').toLowerCase().trim() === 'taxi'
+            || String(selectedService?.nom || '').toLowerCase().includes('taxi');
+        console.log('CONFIRM → estTaxi:', estTaxi, '| type:', selectedService?.type, '| taxiInfo:', taxiInfo);
+        if (estTaxi && !taxiInfo) {
+            notify.error('Veuillez calculer le prix du trajet avant de confirmer');
             setStep(5);
             return;
         }
-
         setLoading(true);
         try {
             const dateDebut = `${date} ${heure}:00`;
@@ -178,8 +183,7 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                 ville: location,
                 date_debut: dateDebut,
                 date_fin: dateFin,
-                montant: selectedService.tarif,
-                notes: notes,
+montant: (selectedService.type === 'taxi' && taxiInfo) ? taxiInfo.prix : selectedService.tarif,                notes: notes,
                 adresse_depart: adresseDepart || null,
                 adresse_arrivee: adresseArrivee || null,
                 client_nom: coordonnees.nom,
@@ -195,11 +199,22 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
         setLoading(false);
     };
 
+   // Un service est-il compatible avec l'espèce de l'animal choisi ?
+    const serviceAccepteAnimal = (service, animal) => {
+        if (!animal) return true;
+        const especes = service.especes_acceptees;
+        if (!especes || especes.length === 0) return true;
+        const espceAnimal = String(animal.espece || '').toLowerCase();
+        if (especes.includes(espceAnimal)) return true;
+        const principales = ['chien', 'chat', 'oiseau', 'reptile', 'rongeur'];
+        if (especes.includes('autre') && !principales.includes(espceAnimal)) return true;
+        return false;
+    };
+
     const getAnimalIcon = (espece) => {
         const icons = { chien: '🐶', chat: '🐱', oiseau: '🐦', lapin: '🐰', hamster: '🐹', tortue: '🐢', poisson: '🐠', reptile: '🦎' };
         return icons[espece] || '🐾';
     };
-
     if (confirmed) {
         return (
             <div style={{padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh'}}>
@@ -378,33 +393,36 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                                 <p style={{color: '#888', fontSize: '14px', marginBottom: '16px'}}>Vous devez d'abord ajouter un animal pour pouvoir réserver.</p>
                             </div>
 
-                            {/* Pop-up modal */}
-                            <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'}}>
-                                <div style={{background: 'white', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
-                                    <div style={{fontSize: '60px', marginBottom: '16px'}}>🐾</div>
-                                    <h3 style={{color: C.brown, fontWeight: '800', fontSize: '22px', marginBottom: '8px'}}>Ajoutez d'abord un animal</h3>
-                                    <p style={{color: '#888', fontSize: '14px', marginBottom: '28px', lineHeight: '1.6'}}>
-                                        Pour réserver un service, vous devez avoir au moins un animal enregistré. Cela ne prend qu'une minute !
-                                    </p>
-                                    <button onClick={() => { window.location.href = '/animals'; }}
-                                        style={{width: '100%', background: C.primary, color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', marginBottom: '12px'}}>
-                                        🐾 Ajouter un animal
-                                    </button>
-                                    <button onClick={() => setStep(2)}
-                                        style={{width: '100%', background: 'white', color: '#888', border: '1.5px solid #e0d5d0', padding: '14px', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: 'pointer'}}>
-                                        ← Retour
-                                    </button>
+                                {/* Pop-up modal */}
+                                <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'}}>
+                                    <div style={{background: 'white', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+                                        <div style={{fontSize: '60px', marginBottom: '16px'}}>🐾</div>
+                                        <h3 style={{color: C.brown, fontWeight: '800', fontSize: '22px', marginBottom: '8px'}}>Ajoutez d'abord un animal</h3>
+                                        <p style={{color: '#888', fontSize: '14px', marginBottom: '28px', lineHeight: '1.6'}}>
+                                            Pour réserver un service, vous devez avoir au moins un animal enregistré. Cela ne prend qu'une minute !
+                                        </p>
+                                        <button onClick={() => { window.location.href = '/animals'; }}
+                                            style={{width: '100%', background: C.primary, color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', marginBottom: '12px'}}>
+                                            🐾 Ajouter un animal
+                                        </button>
+                                        <button onClick={() => setStep(2)}
+                                            style={{width: '100%', background: 'white', color: '#888', border: '1.5px solid #e0d5d0', padding: '14px', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: 'pointer'}}>
+                                            ← Retour
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px'}}>
-                            {animals.map(animal => (
-                                <div key={animal.id} onClick={() => setSelectedAnimal(animal)}
+                            </>
+                        ) : (
+                       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px', marginBottom: '20px'}}>
+                            {animals.map(animal => {
+                                const compatible = serviceAccepteAnimal(selectedService, animal);
+                                return (
+                                <div key={animal.id} onClick={() => { if (compatible) setSelectedAnimal(animal); }}
                                     style={{
-                                        padding: '16px', borderRadius: '14px', cursor: 'pointer', textAlign: 'center',
+                                        padding: '16px', borderRadius: '14px', cursor: compatible ? 'pointer' : 'not-allowed', textAlign: 'center',
                                         border: `2px solid ${selectedAnimal?.id === animal.id ? C.primary : '#f0f0f0'}`,
                                         background: selectedAnimal?.id === animal.id ? '#FFF0EE' : 'white',
+                                        opacity: compatible ? 1 : 0.45,
                                         transition: 'all 0.2s'
                                     }}>
                                     {animal.photo ? (
@@ -415,20 +433,30 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                                     )}
                                     <p style={{fontWeight: '700', color: C.brown, margin: '0 0 2px', fontSize: '14px'}}>{animal.nom}</p>
                                     <p style={{color: '#888', fontSize: '12px', margin: 0, textTransform: 'capitalize'}}>{animal.espece}</p>
-                                    {selectedAnimal?.id === animal.id && (
+                                    {selectedAnimal?.id === animal.id && compatible && (
                                         <span style={{display: 'inline-block', marginTop: '6px', background: C.primary, color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700'}}>
                                             ✓ Sélectionné
                                         </span>
                                     )}
+                                    {!compatible && (
+                                        <span style={{display: 'inline-block', marginTop: '6px', background: '#f5f5f5', color: '#999', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600'}}>
+                                            Non accepté
+                                        </span>
+                                    )}
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
 
                     <div style={{display: 'flex', gap: '12px', marginTop: '20px'}}>
                         <button onClick={() => setStep(2)} style={{flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer'}}>← Retour</button>
-                        <button onClick={() => {
+                      <button onClick={() => {
                             if (!selectedAnimal) { notify.error('Veuillez sélectionner un animal'); return; }
+                            if (!serviceAccepteAnimal(selectedService, selectedAnimal)) {
+                                notify.error(`Ce prestataire n'accepte pas les ${selectedAnimal.espece}. Choisissez un autre animal ou revenez au choix du service.`);
+                                return;
+                            }
                             setStep(4);
                         }} disabled={animals.length === 0}
                             style={{flex: 2, background: C.primary, color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', opacity: animals.length === 0 ? 0.5 : 1}}>
@@ -537,17 +565,19 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                             )}
                         </div>
 
-                        <div>
-                            <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Durée</label>
-                            <div style={{display: 'flex', gap: '8px'}}>
-                                {['30', '45', '60'].map(d => (
-                                    <button key={d} onClick={() => setDuree(d)}
-                                        style={{flex: 1, padding: '10px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: duree === d ? C.primary : C.beige, color: duree === d ? 'white' : C.brown, fontWeight: '600', fontSize: '13px'}}>
-                                        {d} min
-                                    </button>
-                                ))}
+                       {selectedService?.type !== 'taxi' && (
+                            <div>
+                                <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Durée</label>
+                                <div style={{display: 'flex', gap: '8px'}}>
+                                    {['30', '45', '60'].map(d => (
+                                        <button key={d} onClick={() => setDuree(d)}
+                                            style={{flex: 1, padding: '10px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: duree === d ? C.primary : C.beige, color: duree === d ? 'white' : C.brown, fontWeight: '600', fontSize: '13px'}}>
+                                            {d} min
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Taxi : adresses départ/arrivée */}
                         {selectedService?.type === 'taxi' && (
@@ -563,6 +593,39 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                                     <AddressInput value={adresseArrivee} onChange={val => setAdresseArrivee(val)} placeholder="Ex: Clinique vétérinaire, Hay Riad"/>
                                     {!adresseArrivee && <FieldError message="Adresse d'arrivée obligatoire pour le taxi"/>}
                                 </div>
+                                {/* Calcul automatique du prix */}
+                                <div>
+                                    <button type="button"
+                                        disabled={!adresseDepart || !adresseArrivee || calculTaxi}
+                                        onClick={async () => {
+                                            setCalculTaxi(true);
+                                            setTaxiInfo(null);
+                                            const res = await calculerTrajetDepuisAdresses(adresseDepart, adresseArrivee, selectedAnimal?.espece || 'chien');
+                                            if (res.ok) setTaxiInfo(res);
+                                            else notify.error(res.message || 'Impossible de calculer le trajet');
+                                            setCalculTaxi(false);
+                                        }}
+                                        style={{width: '100%', background: (!adresseDepart || !adresseArrivee) ? '#ccc' : C.brown, color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: (!adresseDepart || !adresseArrivee) ? 'not-allowed' : 'pointer', fontSize: '14px'}}>
+                                        {calculTaxi ? '⏳ Calcul en cours...' : '🧮 Calculer le prix du trajet'}
+                                    </button>
+
+                                    {taxiInfo && (
+                                        <div style={{marginTop: '12px', background: '#E8F5E9', borderRadius: '12px', padding: '14px'}}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
+                                                <span style={{color: '#555', fontSize: '13px'}}>📏 Distance</span>
+                                                <span style={{color: C.brown, fontWeight: '700', fontSize: '13px'}}>{taxiInfo.distance} km</span>
+                                            </div>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
+                                                <span style={{color: '#555', fontSize: '13px'}}>⏱️ Durée estimée</span>
+                                                <span style={{color: C.brown, fontWeight: '700', fontSize: '13px'}}>{taxiInfo.duree} min</span>
+                                            </div>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #c8e6c9'}}>
+                                                <span style={{color: '#2e7d32', fontSize: '15px', fontWeight: '700'}}>💰 Prix estimé</span>
+                                                <span style={{color: '#2e7d32', fontWeight: '800', fontSize: '18px'}}>{taxiInfo.prix} DH</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         )}
 
@@ -575,15 +638,21 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                     </div>
                     <div style={{display: 'flex', gap: '12px', marginTop: '20px'}}>
                         <button onClick={() => setStep(4)} style={{flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer'}}>← Retour</button>
-                        <button onClick={() => {
+                       <button onClick={() => {
                             const check = validateDateHeure(date, heure);
                             if (!check.valid) { notify.error(check.message); return; }
                             if (selectedService?.type === 'taxi' && (!adresseDepart || !adresseArrivee)) {
                                 notify.error('Les adresses de départ et d\'arrivée sont obligatoires pour le taxi');
                                 return;
                             }
+                            if (selectedService?.type === 'taxi' && !taxiInfo) {
+                                notify.error('Veuillez calculer le prix du trajet avant de continuer');
+                                return;
+                            }
                             setStep(6);
                         }} style={{flex: 2, background: C.primary, color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', cursor: 'pointer'}}>
+                            
+                            
                             Continuer →
                         </button>
                     </div>
@@ -670,8 +739,15 @@ export default function Booking({ pendingBooking, clearPendingBooking }) {
                             <div style={{fontSize: '30px'}}>{getAnimalIcon(selectedAnimal?.espece)}</div>
                         )}
                         <div>
+                           <div>
                             <p style={{fontWeight: '700', color: C.brown, margin: 0}}>{selectedAnimal?.nom}</p>
                             <p style={{color: '#888', fontSize: '12px', margin: 0, textTransform: 'capitalize'}}>{selectedAnimal?.espece} {selectedAnimal?.race ? `• ${selectedAnimal.race}` : ''}</p>
+                            {(selectedAnimal?.taille || selectedAnimal?.poids) && (
+                                <p style={{color: '#aaa', fontSize: '12px', margin: '2px 0 0'}}>
+                                    {selectedAnimal?.taille ? `📏 ${selectedAnimal.taille}` : ''}{selectedAnimal?.taille && selectedAnimal?.poids ? ' • ' : ''}{selectedAnimal?.poids ? `⚖️ ${selectedAnimal.poids} kg` : ''}
+                                </p>
+                            )}
+                        </div>
                         </div>
                     </div>
 
