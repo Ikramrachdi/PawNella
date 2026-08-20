@@ -36,6 +36,7 @@ export default function RegisterPrestataire({ onSwitch, onHome }) {
     });
 
     const selectedCountry = countries.find(c => c.code === form.pays) || countries[0];
+    const nomValide = (v) => /^[A-Za-zÀ-ÿ\s'-]+$/.test((v || '').trim());
     const touch = (field) => setTouched(prev => ({...prev, [field]: true}));
     const touchAll = (fields) => setTouched(prev => ({...prev, ...fields.reduce((acc, f) => ({...acc, [f]: true}), {})}));
 
@@ -187,8 +188,8 @@ export default function RegisterPrestataire({ onSwitch, onHome }) {
                                     onBlur={() => touch('nom')}
                                     style={{width: '100%', border: fieldBorder(touched.nom && !form.nom), borderRadius: '10px', padding: '10px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box'}}
                                     placeholder="Votre nom"/>
-                                {touched.nom && !form.nom && <FieldError message="Nom obligatoire"/>}
-                            </div>
+{touched.nom && !form.nom && <FieldError message="Nom obligatoire"/>}
+                                {touched.nom && form.nom && !nomValide(form.nom) && <FieldError message="Le nom ne doit pas contenir de chiffres"/>}                            </div>
                             <div>
                                 <label style={{display: 'block', fontSize: '13px', fontWeight: '600', color: C.brown, marginBottom: '6px'}}>Prénom *</label>
                                 <input ref={refs.prenom} type="text" value={form.prenom}
@@ -196,8 +197,8 @@ export default function RegisterPrestataire({ onSwitch, onHome }) {
                                     onBlur={() => touch('prenom')}
                                     style={{width: '100%', border: fieldBorder(touched.prenom && !form.prenom), borderRadius: '10px', padding: '10px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box'}}
                                     placeholder="Votre prénom"/>
-                                {touched.prenom && !form.prenom && <FieldError message="Prénom obligatoire"/>}
-                            </div>
+{touched.prenom && !form.prenom && <FieldError message="Prénom obligatoire"/>}
+                                {touched.prenom && form.prenom && !nomValide(form.prenom) && <FieldError message="Le prénom ne doit pas contenir de chiffres"/>}                            </div>
                         </div>
 
                         <div style={{background: C.beige, borderRadius: '10px', padding: '10px 14px'}}>
@@ -245,9 +246,9 @@ export default function RegisterPrestataire({ onSwitch, onHome }) {
 
                         <button onClick={() => {
                             touchAll(['nom', 'prenom', 'email', 'password', 'password_confirmation']);
-                            const errors = {};
-                            if (!form.nom) errors.nom = true;
-                            if (!form.prenom) errors.prenom = true;
+                           const errors = {};
+                            if (!form.nom || !nomValide(form.nom)) errors.nom = true;
+                            if (!form.prenom || !nomValide(form.prenom)) errors.prenom = true;
                             if (!form.email || !validateEmail(form.email)) errors.email = true;
                             if (!form.password || !validatePassword(form.password)) errors.password = true;
                             if (form.password !== form.password_confirmation) errors.password_confirmation = true;

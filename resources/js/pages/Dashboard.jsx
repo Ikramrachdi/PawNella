@@ -140,9 +140,10 @@ function HomePage({ user, setPage, userLocation }) {
     const [annonces, setAnnonces] = useState([]);
 
     useEffect(() => {
+        if (!user?.id) return;
         fetchStats();
         fetchAnnonces();
-    }, []);
+    }, [user?.id]);
 
     const fetchStats = async () => {
         try {

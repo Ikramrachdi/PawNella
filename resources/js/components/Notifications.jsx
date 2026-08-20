@@ -148,7 +148,13 @@ export default function Notifications({ userId }) {
                             ) : (
                                 notifications.map(notif => (
                                     <div key={notif.id}
-                                        onClick={() => markAsRead(notif.id)}
+                                       onClick={() => {
+                                            markAsRead(notif.id);
+                                            setShowPanel(false);
+                                            if (notif.type === 'reservation') window.location.href = '/reservations';
+                                            else if (notif.type === 'message') window.location.href = '/messages';
+                                            else if (notif.type === 'adoption') window.location.href = '/adoption';
+                                        }}
                                         style={{
                                             padding: '14px 20px',
                                             borderBottom: '1px solid #f5f5f5',

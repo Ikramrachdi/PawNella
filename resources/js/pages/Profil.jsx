@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { validatePhone, validateEmail } from '../utils/validation';
 import { ErrorBanner, FieldError, FieldSuccess, fieldBorder } from '../components/FormError';
+
 
 const C = {
     primary: '#E8756A',
@@ -26,6 +27,17 @@ export default function Profil({ onNavigate }) {
         biographie: user?.biographie || '',
     });
     const [success, setSuccess] = useState('');
+    const [avisRecus, setAvisRecus] = useState({ avis: [], moyenne: 0, total: 0 });
+
+    useEffect(() => {
+        if (user?.role === 'prestataire') {
+            api.get('/mes-avis')
+                .then(res => setAvisRecus(res.data))
+                .catch(err => console.error(err));
+        }
+    }, [user?.id]);
+
+    const etoiles = (note) => '★'.repeat(note) + '☆'.repeat(5 - note);
 
     const touch = (field) => setTouched(prev => ({...prev, [field]: true}));
 
@@ -205,7 +217,49 @@ export default function Profil({ onNavigate }) {
                     </div>
                 )}
             </div>
+            {/* Mes avis reçus (prestataire uniquement) */}
+            {user?.role === 'prestataire' && (
+                <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
+                        <h3 style={{fontSize: '18px', fontWeight: '800', color: C.brown, margin: 0}}>⭐ Mes avis reçus</h3>
+                        {avisRecus.total > 0 && (
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <span style={{color: '#FFB800', fontWeight: '800', fontSize: '18px'}}>{avisRecus.moyenne}</span>
+                                <span style={{color: '#FFB800', fontSize: '16px'}}>{etoiles(Math.round(avisRecus.moyenne))}</span>
+                                <span style={{color: '#aaa', fontSize: '13px'}}>({avisRecus.total} avis)</span>
+                            </div>
+                        )}
+                    </div>
 
+                    {avisRecus.total === 0 ? (
+                        <div style={{textAlign: 'center', padding: '24px', color: '#aaa'}}>
+                            <div style={{fontSize: '40px', marginBottom: '8px'}}>⭐</div>
+                            <p style={{fontSize: '14px', margin: 0}}>Vous n'avez pas encore reçu d'avis</p>
+                        </div>
+                    ) : (
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                            {avisRecus.avis.map(a => (
+                                <div key={a.id} style={{padding: '14px 16px', background: C.beige, borderRadius: '12px'}}>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px'}}>
+                                        <div style={{width: '36px', height: '36px', borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px', flexShrink: 0}}>
+                                            {a.client?.prenom?.[0]?.toUpperCase() || '?'}
+                                        </div>
+                                        <div style={{flex: 1}}>
+                                            <p style={{fontWeight: '700', color: C.brown, margin: 0, fontSize: '14px'}}>
+                                                {a.client?.prenom} {a.client?.nom?.[0] ? a.client.nom[0].toUpperCase() + '.' : ''}
+                                            </p>
+                                            <span style={{color: '#FFB800', fontSize: '13px'}}>{etoiles(a.note)}</span>
+                                        </div>
+                                    </div>
+                                    {a.commentaire && (
+                                        <p style={{color: '#666', fontSize: '13px', margin: 0, lineHeight: '1.5'}}>{a.commentaire}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
             {/* Menu options */}
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', overflow: 'hidden', marginBottom: '16px'}}>
                 {menuItems.map((item, i) => (
