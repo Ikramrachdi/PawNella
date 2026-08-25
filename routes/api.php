@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::put('/me', [AuthController::class, 'update']);
     Route::get('/mes-avis', [AvisController::class, 'mesAvis']);
+    Route::get('/mes-avis-client', [AvisController::class, 'mesAvisClient']);
     Route::post('/avis', [AvisController::class, 'store']);
 
     Route::apiResource('animals', AnimalController::class);

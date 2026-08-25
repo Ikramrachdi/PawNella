@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Storage;
 class UploadController extends Controller
 {
     public function upload(Request $request) {
-        $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+              $request->validate([
+            'photo' => 'required|file|mimes:jpeg,png,jpg,gif,webp,pdf|max:10240',
         ]);
 
         $path = $request->file('photo')->store('photos', 'public');

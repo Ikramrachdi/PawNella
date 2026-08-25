@@ -17,8 +17,7 @@ export default function Notifications({ userId }) {
         requestPermission();
         fetchNotifications();
         // Polling toutes les 30 secondes
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
+        const interval = setInterval(fetchNotifications, 10000);        return () => clearInterval(interval);
     }, []);
 
     const requestPermission = async () => {

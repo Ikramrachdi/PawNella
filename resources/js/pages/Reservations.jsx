@@ -74,7 +74,9 @@ export default function Reservations() {
         });
         if (!confirmed) return;
         try {
-            await api.put(`/reservations/${id}`, { statut_trajet: statutTrajet });
+                       const payload = { statut_trajet: statutTrajet };
+            if (statutTrajet === 'termine') payload.statut = 'terminee';
+            await api.put(`/reservations/${id}`, payload);
             notify.success(`Trajet : ${label}`);
             fetchReservations();
         } catch (err) {
@@ -135,28 +137,31 @@ export default function Reservations() {
     };
 
     // Client : ouvrir le formulaire d'avis
-    const ouvrirAvis = (r) => {
+    const [avisType, setAvisType] = useState('client_vers_prestataire');
+
+    const ouvrirAvis = (r, type = 'client_vers_prestataire') => {
         setAvisResa(r);
+        setAvisType(type);
         setNote(0);
         setCommentaire('');
     };
-
     const envoyerAvis = async () => {
         if (note < 1) {
             notify.error('Veuillez sélectionner une note (1 à 5 étoiles)');
             return;
         }
         setEnvoiAvis(true);
-        try {
+              try {
             await api.post('/avis', {
+                type: avisType,
                 prestataire_id: avisResa.prestataire_id,
+                client_id: avisResa.proprietaire_id,
                 reservation_id: avisResa.id,
                 note: note,
                 commentaire: commentaire.trim() || null,
             });
             notify.success('Merci pour votre avis !');
-            setAvisDeposes([...avisDeposes, avisResa.id]);
-            setAvisResa(null);
+            setAvisDeposes([...avisDeposes, (avisType === 'prestataire_vers_client' ? 'presta-' : '') + avisResa.id]);            setAvisResa(null);
         } catch (err) {
             const brut = err.response?.data?.message || '';
             if (err.response?.status === 409 || brut.includes('Duplicate') || brut.includes('unique')) {
@@ -462,12 +467,18 @@ export default function Reservations() {
                                 )}
 
                                 {/* Statut terminé */}
-                                {r.statut === 'terminee' && (
-                                    <div style={{background: '#E3F2FD', borderRadius: '10px', padding: '10px 14px', textAlign: 'center', marginBottom: '8px'}}>
-                                        <p style={{color: '#1565c0', fontWeight: '700', fontSize: '13px', margin: 0}}>
-                                            🏁 Prestation terminée
-                                        </p>
-                                    </div>
+                                                             {/* Prestataire : noter le client */}
+                                {isPrestataire && r.statut === 'terminee' && (
+                                    avisDeposes.includes('presta-' + r.id) ? (
+                                        <div style={{background: '#E8F5E9', borderRadius: '10px', padding: '10px 14px', textAlign: 'center', marginTop: '8px'}}>
+                                            <p style={{color: '#2e7d32', fontWeight: '700', fontSize: '13px', margin: 0}}>⭐ Vous avez noté ce client</p>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => ouvrirAvis(r, 'prestataire_vers_client')}
+                                            style={{width: '100%', background: '#FFB800', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', marginTop: '8px'}}>
+                                            ⭐ Noter le client
+                                        </button>
+                                    )
                                 )}
 
                                 {/* Client : laisser un avis */}
@@ -503,11 +514,13 @@ export default function Reservations() {
             {avisResa && (
                 <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(74,44,36,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'}}>
                     <div style={{background: 'white', borderRadius: '20px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 12px 40px rgba(0,0,0,0.25)'}}>
-                        <h3 style={{color: C.brown, fontWeight: '800', fontSize: '20px', margin: '0 0 6px', textAlign: 'center'}}>
-                            Votre avis
+                                          <h3 style={{color: C.brown, fontWeight: '800', fontSize: '20px', margin: '0 0 6px', textAlign: 'center'}}>
+                            {avisType === 'prestataire_vers_client' ? 'Noter le client' : 'Votre avis'}
                         </h3>
                         <p style={{color: '#888', fontSize: '14px', margin: '0 0 20px', textAlign: 'center'}}>
-                            {avisResa.prestataire?.prenom} {avisResa.prestataire?.nom} — {avisResa.type_service}
+                            {avisType === 'prestataire_vers_client'
+                                ? `${avisResa.proprietaire?.prenom || ''} ${avisResa.proprietaire?.nom || ''}`
+                                : `${avisResa.prestataire?.prenom || ''} ${avisResa.prestataire?.nom || ''} — ${avisResa.type_service}`}
                         </p>
 
                         {/* Étoiles */}

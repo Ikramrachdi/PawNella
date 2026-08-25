@@ -27,7 +27,8 @@ export default function Profil({ onNavigate }) {
         biographie: user?.biographie || '',
     });
     const [success, setSuccess] = useState('');
-    const [avisRecus, setAvisRecus] = useState({ avis: [], moyenne: 0, total: 0 });
+      const [avisRecus, setAvisRecus] = useState({ avis: [], moyenne: 0, total: 0 });
+    const [avisClientRecus, setAvisClientRecus] = useState({ avis: [], moyenne: 0, total: 0 });
 
     useEffect(() => {
         if (user?.role === 'prestataire') {
@@ -35,6 +36,10 @@ export default function Profil({ onNavigate }) {
                 .then(res => setAvisRecus(res.data))
                 .catch(err => console.error(err));
         }
+        // Avis reçus en tant que client (notes des prestataires) — pour tout le monde
+        api.get('/mes-avis-client')
+            .then(res => setAvisClientRecus(res.data))
+            .catch(err => console.error(err));
     }, [user?.id]);
 
     const etoiles = (note) => '★'.repeat(note) + '☆'.repeat(5 - note);
@@ -75,10 +80,9 @@ export default function Profil({ onNavigate }) {
         setLoading(false);
     };
 
-    const menuItems = [
+    const menuBase = [
         { icon: '🐾', label: 'Mes animaux', desc: 'Gérer mes animaux', action: () => onNavigate && onNavigate('animals') },
         { icon: '📅', label: 'Mes réservations', desc: 'Voir mes réservations', action: () => onNavigate && onNavigate('reservations') },
-        { icon: '💰', label: 'Mes paiements', desc: 'Historique des paiements', action: () => alert('💰 Fonctionnalité paiement bientôt disponible !') },
         { icon: '📢', label: 'Mes annonces', desc: 'Annonces d\'adoption', action: () => onNavigate && onNavigate('adoption') },
         { icon: '🔔', label: 'Notifications', desc: 'Gérer les notifications', action: () => alert('🔔 Activez les notifications dans votre navigateur !') },
         { icon: '🌍', label: 'Langue', desc: 'Français', action: () => setShowLangue(true) },
@@ -86,6 +90,12 @@ export default function Profil({ onNavigate }) {
         { icon: 'ℹ️', label: 'À propos de PawNella', desc: 'Notre mission et nos services', action: () => onNavigate && onNavigate('apropos') },
     ];
 
+    const menuItems = user?.role === 'prestataire'
+        ? [
+            { icon: '🔧', label: 'Mes services', desc: 'Gérer mes services', action: () => onNavigate && onNavigate('mes-services') },
+            ...menuBase,
+          ]
+        : menuBase;
     return (
         <div style={{padding: '24px'}}>
             <h2 style={{fontSize: '24px', fontWeight: '800', color: C.brown, marginBottom: '24px'}}>Mon profil</h2>
@@ -121,9 +131,7 @@ export default function Profil({ onNavigate }) {
                         <div style={{width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #E8756A, #4A2C24)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '28px'}}>
                             {user?.prenom?.[0]}{user?.nom?.[0]}
                         </div>
-                        <button style={{position: 'absolute', bottom: 0, right: 0, background: C.primary, border: 'none', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: 'white', fontSize: '12px'}}>
-                            ✏️
-                        </button>
+
                     </div>
                     <div>
                         <h3 style={{fontSize: '20px', fontWeight: '800', color: C.brown, margin: '0 0 4px'}}>{user?.prenom} {user?.nom}</h3>
@@ -219,6 +227,7 @@ export default function Profil({ onNavigate }) {
             </div>
             {/* Mes avis reçus (prestataire uniquement) */}
             {user?.role === 'prestataire' && (
+                
                 <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
                         <h3 style={{fontSize: '18px', fontWeight: '800', color: C.brown, margin: 0}}>⭐ Mes avis reçus</h3>
@@ -258,6 +267,39 @@ export default function Profil({ onNavigate }) {
                             ))}
                         </div>
                     )}
+                </div>
+            )}
+                        {/* Avis reçus en tant que client (notes des prestataires) */}
+            {avisClientRecus.total > 0 && (
+                <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
+                        <h3 style={{fontSize: '18px', fontWeight: '800', color: C.brown, margin: 0}}>🤝 Mon évaluation en tant que client</h3>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                            <span style={{color: '#FFB800', fontWeight: '800', fontSize: '18px'}}>{avisClientRecus.moyenne}</span>
+                            <span style={{color: '#FFB800', fontSize: '16px'}}>{etoiles(Math.round(avisClientRecus.moyenne))}</span>
+                            <span style={{color: '#aaa', fontSize: '13px'}}>({avisClientRecus.total})</span>
+                        </div>
+                    </div>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                        {avisClientRecus.avis.map(a => (
+                            <div key={a.id} style={{padding: '14px 16px', background: C.beige, borderRadius: '12px'}}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px'}}>
+                                    <div style={{width: '36px', height: '36px', borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px', flexShrink: 0}}>
+                                        {a.prestataire?.prenom?.[0]?.toUpperCase() || '?'}
+                                    </div>
+                                    <div style={{flex: 1}}>
+                                        <p style={{fontWeight: '700', color: C.brown, margin: 0, fontSize: '14px'}}>
+                                            {a.prestataire?.prenom} {a.prestataire?.nom?.[0] ? a.prestataire.nom[0].toUpperCase() + '.' : ''}
+                                        </p>
+                                        <span style={{color: '#FFB800', fontSize: '13px'}}>{etoiles(a.note)}</span>
+                                    </div>
+                                </div>
+                                {a.commentaire && (
+                                    <p style={{color: '#666', fontSize: '13px', margin: 0, lineHeight: '1.5'}}>{a.commentaire}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
             {/* Menu options */}

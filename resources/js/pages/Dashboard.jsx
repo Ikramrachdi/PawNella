@@ -220,8 +220,11 @@ function HomePage({ user, setPage, userLocation }) {
 
             <div style={{background: 'white', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: '28px'}}>
                 <span>🔍</span>
-                <input placeholder="Rechercher un service..." style={{border: 'none', outline: 'none', flex: 1, fontSize: '14px', color: '#888', background: 'transparent', width: '100%'}}/>
-            </div>
+                <input placeholder="Rechercher un service..." 
+                    onKeyDown={(e) => { if (e.key === 'Enter') setPage('services'); }}
+                    onClick={() => setPage('services')}
+                    readOnly
+                    style={{border: 'none', outline: 'none', flex: 1, fontSize: '14px', color: '#888', background: 'transparent', width: '100%', cursor: 'pointer'}}/>            </div>
 
             <div style={{marginBottom: '28px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>

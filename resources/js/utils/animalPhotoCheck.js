@@ -28,8 +28,7 @@ const MOTS_CLES = {
     tortue: ['turtle', 'tortoise', 'terrapin', 'loggerhead'],
     poisson: ['fish', 'goldfish', 'anemone fish', 'puffer', 'tench', 'eel'],
     reptile: ['lizard', 'gecko', 'iguana', 'chameleon', 'snake', 'agama', 'reptile', 'frilled lizard', 'komodo'],
-    autre: [],
-};
+    autre: ['ferret', 'weasel', 'horse', 'pony', 'goat', 'sheep', 'pig', 'hog', 'boar', 'ox', 'cow', 'cattle', 'bull', 'donkey', 'llama', 'camel', 'hedgehog', 'chinchilla', 'squirrel', 'raccoon', 'otter', 'monkey', 'ape', 'hen', 'chicken', 'cock', 'rooster', 'duck', 'goose', 'turkey', 'peacock', 'animal', 'mammal'],};
 
 // Espèces bien reconnues par le modèle → on peut être strict
 const ESPECES_FIABLES = ['chien', 'chat', 'oiseau', 'lapin'];
@@ -40,8 +39,7 @@ const ESPECES_FIABLES = ['chien', 'chat', 'oiseau', 'lapin'];
  * @param {string} espece  espèce attendue (chien, chat, ...)
  * @returns {Promise<{ok:boolean, statut:'valide'|'incoherent'|'incertain', message:string, detecte:string}>}
  */
-export async function verifierPhotoAnimal(imageSource, espece) {
-    try {
+export async function verifierPhotoAnimal(imageSource, espece, nomEspeceLibre = '') {    try {
         const model = await getModel();
 
         // On a besoin d'un élément <img> chargé
@@ -65,8 +63,62 @@ export async function verifierPhotoAnimal(imageSource, espece) {
         const estUnAnimal = labels.some(l => toutesEspeces.some(m => l.includes(m)));
 
         // Correspond-elle à l'espèce demandée ?
-        const motsEspece = MOTS_CLES[espece] || [];
+               const motsEspece = MOTS_CLES[espece] || [];
         const correspond = labels.some(l => motsEspece.some(m => l.includes(m)));
+
+               // Espèce "autre" : on vérifie l'image avec le nom tapé par l'utilisateur
+              // Espèce "autre" : on vérifie seulement que c'est bien un animal,
+        // sans exiger que le nom exact corresponde (impossible de connaître tous les animaux)
+        if (espece === 'autre' || !MOTS_CLES[espece] || MOTS_CLES[espece].length === 0) {
+            if (estUnAnimal) {
+                return {
+                    ok: true,
+                    statut: 'valide',
+                    message: `Photo d'animal confirmée (détecté : "${topLabel}").`,
+                    detecte: topLabel,
+                };
+            }
+            return {
+                ok: false,
+                statut: 'incoherent',
+                message: `Cette image ne semble pas être une photo d'animal (détecté : "${topLabel}"). Veuillez importer une vraie photo de votre animal.`,
+                detecte: topLabel,
+            };
+        
+            const nomTape = String(nomEspeceLibre || '').toLowerCase().trim();
+
+            // Pas de nom saisi → on ne peut pas comparer, on accepte avec avertissement
+            if (!nomTape) {
+                return { ok: true, statut: 'incertain', message: `Précisez le type d'animal pour permettre la vérification.`, detecte: topLabel };
+            }
+
+            // Le nom tapé apparaît-il dans ce que le modèle a détecté ?
+            // Mots à chercher : le nom tapé + ses traductions anglaises connues
+            const motsRecherche = [nomTape, ...(TRAD_FR_EN[nomTape] || [])];
+            const nomCorrespond = labels.some(l =>
+                motsRecherche.some(m => l.includes(m) || m.includes(l.split(',')[0].trim()))
+            );
+            if (nomCorrespond) {
+                return { ok: true, statut: 'valide', message: `Photo confirmée (${nomTape})`, detecte: topLabel };
+            }
+
+            // Le nom ne correspond pas, mais est-ce au moins un animal ?
+            if (estUnAnimal) {
+                return {
+                    ok: false,
+                    statut: 'incoherent',
+                    message: `La photo semble montrer "${topLabel}", pas un(e) "${nomTape}". Vérifiez la photo ou le nom de l'animal.`,
+                    detecte: topLabel,
+                };
+            }
+
+            return {
+                ok: false,
+                statut: 'incoherent',
+                message: `Cette image ne semble pas être une photo d'animal (détecté : "${topLabel}").`,
+                detecte: topLabel,
+            };
+        }
 
         if (correspond) {
             return { ok: true, statut: 'valide', message: `Photo confirmée (${espece})`, detecte: topLabel };

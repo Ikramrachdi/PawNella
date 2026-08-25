@@ -65,7 +65,8 @@ const RACES_PAR_ESPECE = {
     cochon_dinde: ['Américain', 'Abyssin', 'Péruvien', 'Rex', 'Sheltie'],
     tortue: ['Hermann', 'Grecque', 'De Floride', 'Léopard', 'Sillonnée'],
     poisson: ['Poisson rouge', 'Betta', 'Guppy', 'Molly', 'Néon', 'Scalaire', 'Koï'],
-    reptile: ['Gecko', 'Iguane', 'Pogona', 'Serpent des blés', 'Caméléon', 'Python royal'],
+       reptile: ['Gecko', 'Iguane', 'Pogona', 'Serpent des blés', 'Caméléon', 'Python royal'],
+    rongeur: ['Hamster doré / Syrien', 'Hamster russe', 'Hamster Roborovski', 'Cochon d\'Inde', 'Lapin nain', 'Lapin bélier', 'Souris', 'Rat domestique', 'Gerbille', 'Chinchilla', 'Octodon'],
     autre: [],
 };
 
@@ -204,14 +205,13 @@ export default function Animals() {
     };
 
     // Analyse la photo uploadée par rapport à l'espèce choisie
-    const lancerVerifPhoto = async (url, espece) => {
+        const lancerVerifPhoto = async (url, espece, nomLibre = '') => {
         setPhotoChecking(true);
         setPhotoCheck(null);
-        const res = await verifierPhotoAnimal(url, espece);
+        const res = await verifierPhotoAnimal(url, espece, nomLibre);
         setPhotoCheck(res);
         setPhotoChecking(false);
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setTouched({ nom: true, race: true, espece: true, sexe: true, date_naissance: true, type_preuve: true, probleme_sante: true, sante_certifiee: true, contact_urgence_sante: true });
@@ -407,9 +407,9 @@ espece: form.espece === 'autre' ? form.espece_autre.trim() : form.espece,       
                             {/* Saisie libre si "Autre" */}
                             {form.espece === 'autre' && (
                                 <div style={{marginTop: '10px'}}>
-                                    <input type="text" value={form.espece_autre || ''}
+                                                                       <input type="text" value={form.espece_autre || ''}
                                         onChange={e => setForm({...form, espece_autre: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, '')})}
-                                        onBlur={() => touch('espece_autre')}
+                                        onBlur={() => { touch('espece_autre'); if (photoUrl && form.espece === 'autre' && form.espece_autre?.trim()) lancerVerifPhoto(photoUrl, 'autre', form.espece_autre); }}
                                         style={inputStyle(touched.espece_autre && !form.espece_autre?.trim())}
                                         placeholder="Précisez l'espèce (ex: Furet, Cochon, Chèvre...)"/>
                                     {touched.espece_autre && !form.espece_autre?.trim() && <FieldError message="Veuillez préciser l'espèce"/>}
@@ -437,10 +437,10 @@ espece: form.espece === 'autre' ? form.espece_autre.trim() : form.espece,       
                                 <PhotoUpload
                                     label="Photo"
                                     multiple={false}
-                                    onUpload={(url) => {
+                                                                    onUpload={(url) => {
                                         setPhotoUrl(url);
                                         setForm(prev => ({...prev, photo: url}));
-                                        lancerVerifPhoto(url, form.espece);
+                                        lancerVerifPhoto(url, form.espece, form.espece_autre);
                                     }}
                                 />
                             )}

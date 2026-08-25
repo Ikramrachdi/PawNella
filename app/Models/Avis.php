@@ -14,6 +14,7 @@ class Avis extends Model
         'reservation_id',
         'note',
         'commentaire',
+        'type',
     ];
 
     public function client()
