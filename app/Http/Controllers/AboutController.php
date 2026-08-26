@@ -23,11 +23,14 @@ class AboutController extends Controller
 
         $utilisateurs = User::count();
 
-        return response()->json([
+            return response()->json([
             'prestataires_verifies' => $prestatairesVerifies,
             'animaux_adoptes' => $animauxAdoptes,
             'villes' => $villes,
             'utilisateurs' => $utilisateurs,
+            'animaux' => \App\Models\Animal::count(),
+            'services' => \App\Models\Service::where('actif', true)->count(),
+            'reservations' => \App\Models\Reservation::count(),
         ]);
     }
 }
