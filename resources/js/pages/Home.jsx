@@ -310,10 +310,16 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
             {activeTab === 'adoption' && (
                 <section className="landing-section" style={{padding: '60px 40px', maxWidth: '1200px', margin: '0 auto'}}>
                     <h2 className="landing-section-title" style={{fontSize: '32px', fontWeight: '800', color: C.brown, marginBottom: '8px'}}>🐾 Animaux à adopter</h2>
-                    <p style={{color: '#888', marginBottom: '40px'}}>Trouvez votre compagnon idéal</p>
+                         <p style={{color: '#888', marginBottom: '40px'}}>Trouvez votre compagnon idéal</p>
+                    {annonces.filter(a => a.statut === 'active').length === 0 && (
+                        <div style={{textAlign: 'center', padding: '48px 0', color: '#aaa'}}>
+                            <div style={{fontSize: '56px', marginBottom: '12px'}}>🐾</div>
+                            <p style={{fontSize: '15px', color: C.brown, fontWeight: '600'}}>Aucun animal à adopter pour le moment</p>
+                            <p style={{fontSize: '13px'}}>Revenez bientôt !</p>
+                        </div>
+                    )}
                     <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px'}}>
-                        {(annonces.length > 0 ? annonces : ANIMAUX_FICTIFS).map((a, i) => {
-                            const nom = a.animal?.nom || a.nom;
+                        {annonces.filter(a => a.statut === 'active').map((a, i) => {                            const nom = a.animal?.nom || a.nom;
                             const type = a.animal ? `${a.animal.espece} • ${a.animal.race}` : a.type;
                             const photo = a.animal?.photo || a.photo;
                             const icon = a.animal ? getIcon(a.animal.espece) : (a.icon || '🐾');

@@ -112,16 +112,22 @@ const handleSubmit = async (e) => {
             alert('❌ Erreur lors de l\'envoi du message');
         }
     };
-
     const filters = ['Tous', 'Chats', 'Chiens', 'Autres'];
-
-    const filteredAnnonces = annonces.filter(a => {
+           const filteredAnnonces = annonces.filter(a => {
+        if (a.statut !== 'active') return false;
         if (filter === 'Tous') return true;
         if (filter === 'Chats') return a.animal?.espece === 'chat';
         if (filter === 'Chiens') return a.animal?.espece === 'chien';
         return a.animal?.espece !== 'chat' && a.animal?.espece !== 'chien';
     });
 
+    // Tri : les annonces de la ville de l'utilisateur d'abord, puis les autres
+    const villeUser = (user?.ville || '').toLowerCase().trim();
+    filteredAnnonces.sort((a, b) => {
+        const aProche = (a.ville || '').toLowerCase().trim() === villeUser ? 0 : 1;
+        const bProche = (b.ville || '').toLowerCase().trim() === villeUser ? 0 : 1;
+        return aProche - bProche;
+    });
     const getIcon = (espece) => {
         if (espece === 'chat') return '🐱';
         if (espece === 'chien') return '🐶';
@@ -345,7 +351,10 @@ const handleSubmit = async (e) => {
                             </div>
 
                             <div style={{padding: '16px'}}>
-                                <h3 style={{fontWeight: '700', fontSize: '18px', color: C.brown, margin: '0 0 4px'}}>{annonce.animal?.nom || 'Animal'}</h3>
+                                                              <h3 style={{fontWeight: '700', fontSize: '18px', color: C.brown, margin: '0 0 4px'}}>{annonce.animal?.nom || 'Animal'}</h3>
+                                {annonce.ville && (annonce.ville || '').toLowerCase().trim() === villeUser && (
+                                    <span style={{display: 'inline-block', background: '#E8F5E9', color: '#2e7d32', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', marginBottom: '6px'}}>📍 Près de chez vous</span>
+                                )}
                                 <p style={{color: '#888', fontSize: '13px', margin: '0 0 8px', textTransform: 'capitalize'}}>{annonce.animal?.espece} • {annonce.animal?.race}</p>
 
                                 <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px'}}>
