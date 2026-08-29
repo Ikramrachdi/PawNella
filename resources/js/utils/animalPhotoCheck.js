@@ -102,16 +102,15 @@ export async function verifierPhotoAnimal(imageSource, espece, nomEspeceLibre = 
                 return { ok: true, statut: 'valide', message: `Photo confirmée (${nomTape})`, detecte: topLabel };
             }
 
-            // Le nom ne correspond pas, mais est-ce au moins un animal ?
+                    // Le nom ne correspond pas, mais c'est bien un animal → avertissement, on laisse passer
             if (estUnAnimal) {
                 return {
-                    ok: false,
-                    statut: 'incoherent',
-                    message: `La photo semble montrer "${topLabel}", pas un(e) "${nomTape}". Vérifiez la photo ou le nom de l'animal.`,
+                    ok: true,
+                    statut: 'incertain',
+                    message: `Nous avons détecté "${topLabel}". Si c'est bien votre ${nomTape}, vous pouvez continuer.`,
                     detecte: topLabel,
                 };
             }
-
             return {
                 ok: false,
                 statut: 'incoherent',
@@ -134,21 +133,28 @@ export async function verifierPhotoAnimal(imageSource, espece, nomEspeceLibre = 
             };
         }
 
-        // C'est un animal, mais pas l'espèce attendue
-        // Pour les espèces peu fiables, on reste souple (avertissement seulement)
+             // Pour les espèces peu fiables : on vérifie au moins que c'est un animal
         if (!ESPECES_FIABLES.includes(espece)) {
+            if (estUnAnimal) {
+                return {
+                    ok: true,
+                    statut: 'incertain',
+                    message: `Vérification automatique limitée pour cette espèce. Assurez-vous que la photo correspond bien à votre ${espece}.`,
+                    detecte: topLabel,
+                };
+            }
             return {
-                ok: true,
-                statut: 'incertain',
-                message: `Vérification automatique limitée pour cette espèce. Assurez-vous que la photo correspond bien à votre ${espece}.`,
+                ok: false,
+                statut: 'incoherent',
+                message: `Cette image ne semble pas être une photo d'animal (détecté : "${topLabel}"). Veuillez importer une vraie photo.`,
                 detecte: topLabel,
             };
         }
 
-        return {
-            ok: false,
-            statut: 'incoherent',
-            message: `La photo semble montrer un autre animal (détecté : "${topLabel}") alors que vous avez choisi "${espece}". Vérifiez la photo ou l'espèce.`,
+             return {
+            ok: true,
+            statut: 'incertain',
+            message: `Nous avons détecté "${topLabel}" plutôt qu'un(e) "${espece}". Si c'est bien votre animal (photo de loin ou mal cadrée), vous pouvez continuer.`,
             detecte: topLabel,
         };
 
