@@ -10,6 +10,7 @@ const C = {
 
 export default function APropos({ onNavigate, user, onRechercherService, onProposerServices }) {
     const [stats, setStats] = useState(null);
+    const [faqOuverte, setFaqOuverte] = useState(null);
 
     useEffect(() => {
         fetchStats();
@@ -59,6 +60,22 @@ export default function APropos({ onNavigate, user, onRechercherService, onPropo
         { icon: '🤝', titre: 'Transparence', desc: 'Avis vérifiés dans les deux sens, tarifs clairs, aucune mauvaise surprise.' },
     ];
 
+    const securite = [
+        { icon: '✅', titre: 'Prestataires validés', desc: 'Aucun prestataire ne peut publier de service sans avoir été vérifié et approuvé par un administrateur.' },
+        { icon: '📄', titre: 'Justificatif de propriété', desc: 'Chaque animal inscrit doit être accompagné d\'un carnet de vaccination ou certificat vétérinaire.' },
+        { icon: '⭐', titre: 'Avis bidirectionnels', desc: 'Clients et prestataires s\'évaluent mutuellement, pour une communauté de confiance.' },
+        { icon: '🔒', titre: 'Données protégées', desc: 'Vos informations personnelles sont sécurisées et ne sont jamais partagées sans votre accord.' },
+    ];
+
+    const faq = [
+        { q: 'Comment réserver un service ?', r: 'Recherchez un prestataire dans votre ville, choisissez le service souhaité, indiquez votre animal et la date, puis envoyez votre demande. Le prestataire l\'accepte ou la refuse, et vous êtes notifié.' },
+        { q: 'Les prestataires sont-ils vérifiés ?', r: 'Oui. Chaque prestataire est examiné et validé manuellement par notre équipe avant de pouvoir proposer ses services sur la plateforme.' },
+        { q: 'PawNella réalise-t-elle les services ?', r: 'Non. PawNella est une plateforme de mise en relation : nous connectons les propriétaires et les prestataires et facilitons la communication entre eux. Les services sont fournis directement par les prestataires indépendants.' },
+        { q: 'Comment se passe le paiement ?', r: 'Le paiement s\'effectue directement entre vous et le prestataire, selon les modalités convenues ensemble. La plateforme affiche un tarif indicatif pour chaque service.' },
+        { q: 'Puis-je adopter un animal ?', r: 'Oui. La section Adoption présente les animaux à adopter près de chez vous. Manifestez votre intérêt et entrez en contact avec la personne qui propose l\'animal.' },
+        { q: 'Que faire en cas de problème ?', r: 'Vous pouvez contacter le prestataire via la messagerie, laisser un avis, ou signaler un contenu. Notre équipe reste attentive au bon fonctionnement de la communauté.' },
+    ];
+
     const handleProposerServices = () => {
         if (onProposerServices) { onProposerServices(); return; }
         if (user?.role === 'prestataire') {
@@ -80,11 +97,13 @@ export default function APropos({ onNavigate, user, onRechercherService, onPropo
                 .ap-services { display: grid; grid-template-columns: 1fr; gap: 12px; }
                 .ap-etapes { display: grid; grid-template-columns: 1fr; gap: 16px; }
                 .ap-valeurs { display: grid; grid-template-columns: 1fr; gap: 12px; }
+                .ap-secu { display: grid; grid-template-columns: 1fr; gap: 12px; }
                 @media (min-width: 640px) {
                     .ap-stats { grid-template-columns: repeat(4, 1fr); }
                     .ap-services { grid-template-columns: repeat(2, 1fr); }
                     .ap-etapes { grid-template-columns: repeat(4, 1fr); }
                     .ap-valeurs { grid-template-columns: repeat(2, 1fr); }
+                    .ap-secu { grid-template-columns: repeat(2, 1fr); }
                 }
             `}</style>
 
@@ -103,7 +122,20 @@ export default function APropos({ onNavigate, user, onRechercherService, onPropo
                 <h2 style={{fontSize: '22px', fontWeight: '800', color: C.brown, marginBottom: '12px'}}>🎯 Notre mission</h2>
                 <div style={{background: C.rose, borderRadius: '18px', padding: '24px'}}>
                     <p style={{color: C.brown, fontSize: '15px', lineHeight: '1.8', margin: 0}}>
-                        Prendre soin d'un animal ne devrait jamais être une source de stress. Au Maroc, trouver une garde fiable, un toiletteur de confiance ou un transport pour son compagnon relève souvent du parcours du combattant. <strong>PawNella</strong> est née de ce constat : offrir un espace unique, simple et sécurisé où chaque propriétaire trouve le bon prestataire, et où chaque animal en quête de foyer a une chance d'être adopté. Nous ne réalisons pas les services nous-mêmes : nous assurons la <strong>mise en relation et la communication</strong> entre les personnes, en toute confiance.
+                        Prendre soin d'un animal ne devrait jamais être une source de stress. Au Maroc, trouver une garde fiable, un toiletteur de confiance ou un transport pour son compagnon relève souvent du parcours du combattant. <strong>PawNella</strong> est née de ce constat : offrir un espace unique, simple et sécurisé où chaque propriétaire trouve le bon prestataire, et où chaque animal en quête de foyer a une chance d'être adopté.
+                    </p>
+                </div>
+            </section>
+
+            {/* NOTRE ENGAGEMENT (mise en relation, pas prestataire) */}
+            <section style={{marginBottom: '36px'}}>
+                <h2 style={{fontSize: '22px', fontWeight: '800', color: C.brown, marginBottom: '12px'}}>🤝 Notre engagement</h2>
+                <div style={{background: 'white', borderRadius: '18px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', borderLeft: `4px solid ${C.primary}`}}>
+                    <p style={{color: C.brown, fontSize: '15px', lineHeight: '1.8', margin: '0 0 14px'}}>
+                        <strong>PawNella est une plateforme de mise en relation.</strong> Nous ne réalisons pas les services nous-mêmes : notre rôle est de <strong>connecter</strong> les propriétaires d'animaux avec des prestataires indépendants, et de <strong>faciliter la communication</strong> entre eux en toute confiance.
+                    </p>
+                    <p style={{color: '#666', fontSize: '14px', lineHeight: '1.7', margin: 0}}>
+                        Les prestations (garde, toilettage, transport, etc.) sont assurées directement par les prestataires, qui restent responsables de la qualité de leur travail. PawNella met à disposition les outils — recherche, réservation, messagerie, avis — pour que cette relation se déroule dans les meilleures conditions.
                     </p>
                 </div>
             </section>
@@ -146,11 +178,28 @@ export default function APropos({ onNavigate, user, onRechercherService, onPropo
                 <p style={{color: '#888', fontSize: '14px', marginBottom: '18px'}}>Réserver un service en 4 étapes simples</p>
                 <div className="ap-etapes">
                     {etapes.map((e, i) => (
-                        <div key={i} style={{background: C.beige, borderRadius: '16px', padding: '20px 16px', textAlign: 'center', position: 'relative'}}>
+                        <div key={i} style={{background: C.beige, borderRadius: '16px', padding: '20px 16px', textAlign: 'center'}}>
                             <div style={{width: '32px', height: '32px', borderRadius: '50%', background: C.primary, color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px'}}>{e.num}</div>
                             <div style={{fontSize: '28px', marginBottom: '8px'}}>{e.icon}</div>
                             <h3 style={{fontSize: '15px', fontWeight: '700', color: C.brown, margin: '0 0 6px'}}>{e.titre}</h3>
                             <p style={{fontSize: '12px', color: '#888', margin: 0, lineHeight: '1.5'}}>{e.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* SÉCURITÉ & CONFIANCE */}
+            <section style={{marginBottom: '36px'}}>
+                <h2 style={{fontSize: '22px', fontWeight: '800', color: C.brown, marginBottom: '4px'}}>🔒 Sécurité & confiance</h2>
+                <p style={{color: '#888', fontSize: '14px', marginBottom: '18px'}}>Une plateforme pensée pour vous rassurer</p>
+                <div className="ap-secu">
+                    {securite.map((s, i) => (
+                        <div key={i} style={{background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', gap: '14px', alignItems: 'flex-start'}}>
+                            <div style={{fontSize: '26px', flexShrink: 0}}>{s.icon}</div>
+                            <div>
+                                <h3 style={{fontSize: '15px', fontWeight: '700', color: C.brown, margin: '0 0 5px'}}>{s.titre}</h3>
+                                <p style={{fontSize: '13px', color: '#888', margin: 0, lineHeight: '1.6'}}>{s.desc}</p>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -166,6 +215,28 @@ export default function APropos({ onNavigate, user, onRechercherService, onPropo
                             <div style={{fontSize: '30px', marginBottom: '8px'}}>{v.icon}</div>
                             <h3 style={{fontSize: '16px', fontWeight: '700', color: C.brown, margin: '0 0 6px'}}>{v.titre}</h3>
                             <p style={{fontSize: '13px', color: '#888', margin: 0, lineHeight: '1.6'}}>{v.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* FAQ */}
+            <section style={{marginBottom: '36px'}}>
+                <h2 style={{fontSize: '22px', fontWeight: '800', color: C.brown, marginBottom: '4px'}}>❓ Questions fréquentes</h2>
+                <p style={{color: '#888', fontSize: '14px', marginBottom: '18px'}}>Tout ce que vous devez savoir</p>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    {faq.map((item, i) => (
+                        <div key={i} style={{background: 'white', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)'}}>
+                            <button onClick={() => setFaqOuverte(faqOuverte === i ? null : i)}
+                                style={{width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '16px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'}}>
+                                <span style={{fontSize: '15px', fontWeight: '700', color: C.brown}}>{item.q}</span>
+                                <span style={{fontSize: '18px', color: C.primary, flexShrink: 0, transform: faqOuverte === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s'}}>+</span>
+                            </button>
+                            {faqOuverte === i && (
+                                <div style={{padding: '0 20px 18px'}}>
+                                    <p style={{fontSize: '14px', color: '#666', margin: 0, lineHeight: '1.7'}}>{item.r}</p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

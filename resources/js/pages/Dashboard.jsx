@@ -163,14 +163,14 @@ function HomePage({ user, setPage, userLocation }) {
         } catch (err) { console.error(err); }
     };
 
-    const fetchAnnonces = async () => {
+     const fetchAnnonces = async () => {
         try {
             const res = await api.get('/annonces');
-            const mesAnnonces = res.data.filter(a => a.user_id === user?.id);
-            setAnnonces(mesAnnonces.slice(0, 4));
+            // Annonces des AUTRES, disponibles à l'adoption (pas les miennes)
+            const aAdopter = res.data.filter(a => a.user_id !== user?.id && a.statut === 'active');
+            setAnnonces(aAdopter.slice(0, 4));
         } catch (err) { console.error(err); }
     };
-
     const getIcon = (espece) => {
         if (espece === 'chien') return '🐶';
         if (espece === 'chat') return '🐱';
@@ -185,7 +185,21 @@ function HomePage({ user, setPage, userLocation }) {
         if (espece === 'oiseau') return '#E3F2FD';
         return '#FDF5F0';
     };
-
+       const contacterProprio = async (annonce, e) => {
+        if (e) e.stopPropagation();
+        const proprio = annonce.proprietaire || annonce.user;
+        if (!proprio?.id) { setPage('adoption'); return; }
+        try {
+            await api.post('/messages', {
+                destinataire_id: proprio.id,
+                contenu: `Bonjour ! Je suis intéressé(e) par l'adoption de ${annonce.animal?.nom || 'cet animal'}. Pouvez-vous me donner plus d'informations ? 🐾`
+            });
+            setPage('messages');
+        } catch (err) {
+            console.error(err);
+            setPage('adoption');
+        }
+    };
     return (
         <div className="page-pad">
             <div style={{marginBottom: '24px'}}>
@@ -251,8 +265,8 @@ function HomePage({ user, setPage, userLocation }) {
                     <button onClick={() => setPage('adoption')} style={{color: C.primary, fontSize: '13px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600'}}>Voir plus</button>
                 </div>
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: '16px'}}>
-                    {annonces.length > 0 ? annonces.map((a, i) => (
-                        <button key={i} onClick={() => setPage('adoption')}
+                                                      {annonces.length > 0 ? annonces.map((a, i) => (
+                        <button key={i} onClick={(e) => contacterProprio(a, e)}
                             style={{background: getColor(a.animal?.espece), border: 'none', borderRadius: '14px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', overflow: 'hidden'}}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}

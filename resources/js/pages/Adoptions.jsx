@@ -97,17 +97,17 @@ const handleSubmit = async (e) => {
         }
 
         // Confirmation avant d'envoyer le message
-        const confirmer = window.confirm(
-            `Voulez-vous envoyer un message au propriétaire de ${annonce.animal?.nom || 'cet animal'} pour manifester votre intérêt ?`
+                const confirmer = await confirmAction(
+            `Envoyer un message au propriétaire de ${annonce.animal?.nom || 'cet animal'} pour manifester votre intérêt ?`,
+            { title: '❤️ Adoption', confirmLabel: 'Envoyer', cancelLabel: 'Annuler' }
         );
         if (!confirmer) return;
-
-        try {
+              try {
             await api.post('/messages', {
                 destinataire_id: proprio.id,
                 contenu: `Bonjour ! Je suis intéressé(e) par l'adoption de ${annonce.animal?.nom}. Pouvez-vous me donner plus d'informations ? 🐾`
             });
-            alert('✅ Message envoyé au propriétaire !');
+            window.location.href = '/messages';
         } catch (err) {
             alert('❌ Erreur lors de l\'envoi du message');
         }
