@@ -32,14 +32,28 @@ export default function Adoptions({
     }, []);
 
     // Reprise après connexion : ouvre directement l'annonce que le visiteur voulait voir
-    useEffect(() => {
+     useEffect(() => {
         if (pendingBooking?.type === 'adoption' && pendingBooking.annonceId && annonces.length > 0) {
             const annonce = annonces.find(a => a.id === pendingBooking.annonceId);
-            if (annonce) setSelectedAnnonce(annonce);
             if (clearPendingBooking) clearPendingBooking();
+            if (annonce) {
+                const proprio = annonce.proprietaire || annonce.user;
+                if (proprio?.id) {
+                    api.post('/messages', {
+                        destinataire_id: proprio.id,
+                        contenu: `Bonjour ! Je suis intéressé(e) par l'adoption de ${annonce.animal?.nom || 'cet animal'}. Pouvez-vous me donner plus d'informations ? 🐾`
+                    }).then(() => {
+                        window.location.href = '/messages';
+                    }).catch(err => {
+                        console.error(err);
+                        setSelectedAnnonce(annonce); // en cas d'échec, on ouvre au moins la fiche
+                    });
+                } else {
+                    setSelectedAnnonce(annonce);
+                }
+            }
         }
     }, [annonces]);
-
     const fetchAnnonces = async () => {
         try {
             const res = await api.get('/annonces');

@@ -347,13 +347,32 @@ export default function Dashboard({ pendingBooking, clearPendingBooking }) {
 
    // Redirige vers la réservation/adoption en attente dès qu'elle est disponible
   useEffect(() => {
-        if (pendingBooking) {
+          if (pendingBooking) {
             const type = pendingBooking.type;
-            // On vide TOUT DE SUITE pour ne pas redéclencher à la prochaine connexion
-            if (clearPendingBooking) clearPendingBooking();
 
-            if (type === 'adoption') navigate('/adoption');
+                     if (type === 'adoption') {
+                if (clearPendingBooking) clearPendingBooking();
+                if (pendingBooking.annonceId) {
+                    // Envoyer directement le message au propriétaire, puis aller à la messagerie
+                    api.get(`/annonces/${pendingBooking.annonceId}`)
+                        .then(res => {
+                            const annonce = res.data;
+                            const proprio = annonce.proprietaire || annonce.user;
+                            if (proprio?.id) {
+                                return api.post('/messages', {
+                                    destinataire_id: proprio.id,
+                                    contenu: `Bonjour ! Je suis intéressé(e) par l'adoption de ${annonce.animal?.nom || 'cet animal'}. Pouvez-vous me donner plus d'informations ? 🐾`
+                                });
+                            }
+                        })
+                        .then(() => navigate('/messages'))
+                        .catch(err => { console.error(err); navigate('/adoption'); });
+                } else {
+                    navigate('/adoption');
+                }
+            }
             else if (type === 'service') {
+                if (clearPendingBooking) clearPendingBooking();
                 if (user?.role === 'prestataire') {
                     navigate('/mes-services?nouveau=1');
                 } else {
@@ -364,7 +383,10 @@ export default function Dashboard({ pendingBooking, clearPendingBooking }) {
                     ).then(ok => { if (ok) navigate('/register-prestataire'); });
                 }
             }
-            else navigate('/booking');
+                          else {
+                if (clearPendingBooking) clearPendingBooking();
+                navigate('/booking');
+            }
         }
     }, [pendingBooking]);
     const setPage = (id) => {
