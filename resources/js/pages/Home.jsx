@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import APropos from './APropos';
-import SelecteurLangue from '../components/SelecteurLangue';
+
 
 const C = {
     primary: '#E8756A',
@@ -21,7 +21,7 @@ const SERVICES = [
 const ANIMAUX_FICTIFS = [];
 
 export default function Home({ onLogin, onRegister, startPendingBooking }) {
-    const [annonces, setAnnonces] = useState([]);
+     const [annonces, setAnnonces] = useState([]);
     const [activeTab, setActiveTab] = useState('accueil');
     
     const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -116,8 +116,8 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
             <nav className="landing-nav" style={{background: 'white', padding: '12px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 1px 10px rgba(0,0,0,0.08)', position: 'sticky', top: 0, zIndex: 100}}>
                 <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" className="landing-logo" style={{height: '50px'}}/>
                 <div className="landing-nav-links" style={{display: 'flex', gap: '32px'}}>
-                    {[
-                        {id: 'accueil', label: 'Accueil'},
+                                      {[
+                                               {id: 'accueil', label: 'Accueil'},
                         {id: 'services', label: 'Services'},
                         {id: 'adoption', label: 'Adoption'},
                         {id: 'apropos', label: 'À propos'},
@@ -128,8 +128,7 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
                         </button>
                     ))}
                 </div>
-                <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
-                    <SelecteurLangue />
+                                <div style={{display: 'flex', gap: '12px'}}>
                                         <button onClick={onLogin} className="landing-auth-btn" style={{background: 'transparent', border: `1.5px solid ${C.primary}`, color: C.primary, padding: '8px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: '600', fontSize: '14px'}}>
                         Connexion
                     </button>

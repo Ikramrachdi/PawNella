@@ -9,7 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterPrestataire from './pages/RegisterPrestataire';
 import Dashboard from './pages/Dashboard';
-
+import './i18n';
 function AppContent() {
     const { user, loading } = useAuth();
     const navigate = useNavigate();

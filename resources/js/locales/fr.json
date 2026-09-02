@@ -1,0 +1,10 @@
+{
+    "nav": {
+        "accueil": "Accueil",
+        "services": "Services",
+        "adoption": "Adoption",
+        "apropos": "À propos",
+        "connexion": "Connexion",
+        "inscription": "S'inscrire"
+    }
+}
