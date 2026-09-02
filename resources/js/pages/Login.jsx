@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
+
 export default function Login({ onSwitch, onHome }) {
     const { login } = useAuth();
     const [form, setForm] = useState({ email: '', password: '' });
@@ -19,7 +20,7 @@ export default function Login({ onSwitch, onHome }) {
         setLoading(false);
     };
 
-    return (
+        return (
         <div style={{minHeight: '100vh', background: '#fdf5f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(232,117,106,0.15)', padding: '40px', width: '100%', maxWidth: '420px'}}>
                 <div style={{textAlign: 'center', marginBottom: '32px'}}>

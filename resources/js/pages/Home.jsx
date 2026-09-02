@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import APropos from './APropos';
+import SelecteurLangue from '../components/SelecteurLangue';
 
 const C = {
     primary: '#E8756A',
@@ -127,8 +128,9 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
                         </button>
                     ))}
                 </div>
-                <div style={{display: 'flex', gap: '12px'}}>
-                    <button onClick={onLogin} className="landing-auth-btn" style={{background: 'transparent', border: `1.5px solid ${C.primary}`, color: C.primary, padding: '8px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: '600', fontSize: '14px'}}>
+                <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                    <SelecteurLangue />
+                                        <button onClick={onLogin} className="landing-auth-btn" style={{background: 'transparent', border: `1.5px solid ${C.primary}`, color: C.primary, padding: '8px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: '600', fontSize: '14px'}}>
                         Connexion
                     </button>
                     <button onClick={onRegister} className="landing-auth-btn" style={{background: C.primary, border: 'none', color: 'white', padding: '8px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: '600', fontSize: '14px'}}>
@@ -370,14 +372,30 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
                         <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '40px', marginBottom: '8px'}}/>
                         <p style={{color: '#f5c5b5', fontSize: '13px'}}>Pour leur bonheur, pour notre amour.</p>
                     </div>
-                    <div className="landing-footer-links" style={{display: 'flex', gap: '32px'}}>
-                        {['Services', 'Adoption', 'À propos', 'Contact'].map(item => (
-                            <button key={item} style={{color: '#f5c5b5', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer'}}>{item}</button>
-                        ))}
+                                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'}}>
+                        <p style={{color: '#f5c5b5', fontSize: '14px', fontWeight: '600', margin: 0}}>Trouvez-nous sur</p>
+                        <div style={{display: 'flex', gap: '16px'}}>
+                            {/* Facebook */}
+                            <a href="#" target="_blank" rel="noopener noreferrer" title="Facebook"
+                                style={{width: '42px', height: '42px', borderRadius: '50%', background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.68 4.53-4.68 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z"/></svg>
+                            </a>
+                            {/* Instagram */}
+                            <a href="#" target="_blank" rel="noopener noreferrer" title="Instagram"
+                                style={{width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(45deg, #F58529, #DD2A7B, #8134AF)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.38C1.35 2.68.94 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.13.67.66 1.34 1.07 2.13 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.13-1.38.66-.67 1.07-1.34 1.38-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.13C21.32 1.35 20.65.94 19.86.63 19.1.33 18.22.13 16.95.07 15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zm0 10.16a4 4 0 110-8 4 4 0 010 8zm7.85-10.4a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/></svg>
+                            </a>
+                            {/* WhatsApp */}
+                            <a href={`https://wa.me/212687769345?text=${encodeURIComponent('Bonjour PawNella, j\'ai une question')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp"
+                                style={{width: '42px', height: '42px', borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            </a>
+                        </div>
                     </div>
                     <p style={{color: '#f5c5b5', fontSize: '13px'}}>© 2026 PawNella. Tous droits réservés.</p>
                 </div>
             </footer>
+           
         </div>
     );
 }
