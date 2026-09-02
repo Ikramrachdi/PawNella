@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import PhotoUpload from '../components/PhotoUpload';
+import { useNotification } from '../context/NotificationContext';
 
 const C = {
     primary: '#E8756A',
@@ -10,9 +12,10 @@ const C = {
 
 export default function Feed() {
     const { user } = useAuth();
+        const { notify, confirmAction } = useNotification();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState({ contenu: '', type: 'texte' });
+       const [form, setForm] = useState({ contenu: '', type: 'texte', media_url: '' });
     const [showForm, setShowForm] = useState(false);
     const [editingPost, setEditingPost] = useState(null);
     const [editContenu, setEditContenu] = useState('');
@@ -37,7 +40,7 @@ export default function Feed() {
         setLoading(true);
         try {
             await api.post('/posts', form);
-            setForm({ contenu: '', type: 'texte' });
+            setForm({ contenu: '', type: 'texte', media_url: '' });
             setShowForm(false);
             fetchPosts();
         } catch (err) {
@@ -66,12 +69,20 @@ export default function Feed() {
     };
 
     const handleDelete = async (postId) => {
-        if (!window.confirm('Supprimer ce post ?')) return;
+        const confirmed = await confirmAction('Supprimer ce post ?', {
+            title: 'Supprimer',
+            confirmLabel: 'Supprimer',
+            cancelLabel: 'Annuler',
+            danger: true,
+        });
+        if (!confirmed) return;
         try {
             await api.delete(`/posts/${postId}`);
+            notify.success('Post supprimé');
             fetchPosts();
         } catch (err) {
             console.error(err);
+            notify.error('Erreur lors de la suppression');
         }
     };
 
@@ -121,6 +132,17 @@ export default function Feed() {
                         <textarea value={form.contenu} onChange={e => setForm({...form, contenu: e.target.value})}
                             style={{width: '100%', border: '1.5px solid #e0d5d0', borderRadius: '10px', padding: '12px 16px', fontSize: '14px', outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: '16px'}}
                             rows={4} placeholder="Partagez un moment avec votre animal..." required/>
+                                                    {form.media_url ? (
+                            <div style={{position: 'relative', display: 'inline-block', marginBottom: '16px'}}>
+                                <img src={form.media_url} alt="" style={{width: '140px', height: '140px', objectFit: 'cover', borderRadius: '12px', border: `2px solid ${C.primary}`}}/>
+                                <button type="button" onClick={() => setForm({...form, media_url: ''})}
+                                    style={{position: 'absolute', top: '-8px', right: '-8px', background: C.primary, color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontWeight: '700'}}>×</button>
+                            </div>
+                        ) : (
+                            <div style={{marginBottom: '16px'}}>
+                                <PhotoUpload label="📷 Ajouter une photo (optionnel)" multiple={false} onUpload={(url) => setForm({...form, media_url: url})}/>
+                            </div>
+                        )}
                         <div style={{display: 'flex', justifyContent: 'flex-end', gap: '12px'}}>
                             <button type="button" onClick={() => setShowForm(false)}
                                 style={{background: '#f5f5f5', color: '#666', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer'}}>
@@ -193,8 +215,12 @@ export default function Feed() {
                                     </div>
                                 </div>
                             ) : (
-                                <p style={{color: '#555', lineHeight: '1.7', marginBottom: '16px', fontSize: '15px'}}>{post.contenu}</p>
-                            )}
+                                <>
+                                    <p style={{color: '#555', lineHeight: '1.7', marginBottom: post.media_url ? '12px' : '16px', fontSize: '15px'}}>{post.contenu}</p>
+                                    {post.media_url && (
+                                        <img src={post.media_url} alt="" style={{width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px'}}/>
+                                    )}
+                                </>                            )}
 
                             {/* Actions */}
                             <div style={{display: 'flex', gap: '8px', paddingTop: '12px', borderTop: '1px solid #f5f5f5', marginBottom: showComments[post.id] ? '16px' : '0'}}>

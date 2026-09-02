@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('animals', AnimalController::class);
     Route::apiResource('posts', PostController::class);
+        Route::post('/commentaires', [\App\Http\Controllers\CommentaireController::class, 'store']);
+    Route::delete('/commentaires/{commentaire}', [\App\Http\Controllers\CommentaireController::class, 'destroy']);
 
     Route::post('/annonces', [AnnonceAdoptionController::class, 'store']);
     Route::put('/annonces/{annonce}', [AnnonceAdoptionController::class, 'update']);

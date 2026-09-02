@@ -9,8 +9,7 @@ class PostController extends Controller
 {
     public function index() {
         return response()->json(
-            Post::with('auteur')->latest()->get()
-        );
+Post::with(['auteur', 'commentaires.auteur'])->latest()->get()        );
     }
 
     public function store(Request $request) {
@@ -18,10 +17,11 @@ class PostController extends Controller
             'contenu' => 'required|string',
         ]);
 
-        $post = Post::create([
+              $post = Post::create([
             'user_id' => auth()->id(),
             'contenu' => $request->contenu,
             'type' => $request->type ?? 'texte',
+            'media_url' => $request->media_url,
             'visibilite' => 'public',
             'likes' => 0,
         ]);
