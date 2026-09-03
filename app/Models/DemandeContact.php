@@ -8,8 +8,8 @@ class DemandeContact extends Model
 {
     protected $table = 'demandes_contact';
 
-    protected $fillable = [
-        'user_id', 'nom', 'email', 'type', 'objet', 'message', 'statut',
+       protected $fillable = [
+        'user_id', 'nom', 'email', 'telephone', 'type', 'objet', 'message', 'statut',
     ];
 
     public function user()

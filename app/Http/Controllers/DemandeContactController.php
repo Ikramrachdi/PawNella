@@ -10,12 +10,13 @@ class DemandeContactController extends Controller
     // Enregistrer une demande (public : connecté ou non)
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'nom'     => 'required|string|max:255',
-            'email'   => 'required|email|max:255',
-            'type'    => 'required|string|max:100',
-            'objet'   => 'required|string|max:255',
-            'message' => 'required|string|max:2000',
+               $data = $request->validate([
+            'nom'       => 'required|string|max:255',
+            'email'     => 'required|email|max:255',
+            'telephone' => 'nullable|string|max:30',
+            'type'      => 'required|string|max:100',
+            'objet'     => 'required|string|max:255',
+            'message'   => 'required|string|max:2000',
         ]);
 
         $data['user_id'] = auth('sanctum')->id(); // null si non connecté
