@@ -18,6 +18,7 @@ import AdminDashboard from './AdminDashboard';
 import APropos from './APropos';
 import { SERVICE_TYPES } from '../constants/services';
 import { useNotification } from '../context/NotificationContext';
+import Contact from './Contact';
 
 const C = {
     primary: '#E8756A',
@@ -512,6 +513,7 @@ export default function Dashboard({ pendingBooking, clearPendingBooking }) {
                             <Route path="/mes-services" element={<MesServices/>}/>
                             <Route path="/admin" element={<AdminDashboard/>}/>
                             <Route path="/apropos" element={<APropos onNavigate={setPage} user={user}/>}/>
+                                                        <Route path="/contact" element={<Contact user={user}/>}/>
                             <Route path="*" element={<Navigate to="/" replace/>}/>
                         </Routes>
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import APropos from './APropos';
+import Contact from './Contact';
 
 
 const C = {
@@ -117,10 +118,11 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
                 <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" className="landing-logo" style={{height: '50px'}}/>
                 <div className="landing-nav-links" style={{display: 'flex', gap: '32px'}}>
                                       {[
-                                               {id: 'accueil', label: 'Accueil'},
+                                                 {id: 'accueil', label: 'Accueil'},
                         {id: 'services', label: 'Services'},
                         {id: 'adoption', label: 'Adoption'},
                         {id: 'apropos', label: 'À propos'},
+                        {id: 'contact', label: 'Contact'},
                     ].map(item => (
                         <button key={item.id} onClick={() => setActiveTab(item.id)}
                             style={{color: activeTab === item.id ? C.primary : C.brown, fontWeight: activeTab === item.id ? '700' : '500', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: activeTab === item.id ? `2px solid ${C.primary}` : 'none', paddingBottom: '4px'}}>
@@ -362,6 +364,10 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
                     onRechercherService={() => setActiveTab('services')}
                     onProposerServices={() => onRegister()}
                 />
+            )}
+                        {/* CONTACT TAB */}
+            {activeTab === 'contact' && (
+                <Contact />
             )}
 
             {/* FOOTER */}

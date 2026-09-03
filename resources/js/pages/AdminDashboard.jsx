@@ -13,14 +13,32 @@ export default function AdminDashboard() {
     const [prestataires, setPrestataires] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('en_attente');
+        const [vue, setVue] = useState('prestataires'); // 'prestataires' ou 'contact'
+    const [demandes, setDemandes] = useState([]);
 
     // Prestataire dont on inspecte les documents
     const [selected, setSelected] = useState(null);
     // Image affichée en plein écran
     const [zoomImg, setZoomImg] = useState(null);
 
-    useEffect(() => { fetchPrestataires(); }, []);
+    useEffect(() => { fetchPrestataires(); fetchDemandes(); }, []);
 
+    const fetchDemandes = async () => {
+        try {
+            const res = await api.get('/contact');
+            setDemandes(res.data);
+        } catch (err) { console.error(err); }
+    };
+
+    const marquerTraitee = async (id) => {
+        try {
+            await api.put(`/contact/${id}`, { statut: 'traitee' });
+            fetchDemandes();
+            notify.success('Demande marquée comme traitée');
+        } catch (err) { notify.error('Erreur'); }
+    };
+
+    const nouvellesDemandes = demandes.filter(d => d.statut === 'nouvelle').length;
     const fetchPrestataires = async () => {
         setLoading(true);
         try {
@@ -197,11 +215,29 @@ export default function AdminDashboard() {
     // ---------- VUE LISTE ----------
     return (
         <div style={{ padding: '24px' }}>
-            <div style={{ marginBottom: '24px' }}>
+                       <div style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: '800', color: C.brown, margin: '0 0 4px' }}>👑 Administration</h2>
-                <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>Validation des prestataires</p>
+                <p style={{ color: '#888', fontSize: '14px', margin: 0 }}>Gestion de la plateforme</p>
             </div>
 
+            {/* ONGLETS */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '2px solid #f0e5e0' }}>
+                <button onClick={() => setVue('prestataires')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', fontSize: '15px', fontWeight: vue === 'prestataires' ? '800' : '500', color: vue === 'prestataires' ? C.primary : '#888', borderBottom: vue === 'prestataires' ? `3px solid ${C.primary}` : '3px solid transparent', marginBottom: '-2px' }}>
+                    🔧 Prestataires
+                </button>
+                <button onClick={() => setVue('contact')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', fontSize: '15px', fontWeight: vue === 'contact' ? '800' : '500', color: vue === 'contact' ? C.primary : '#888', borderBottom: vue === 'contact' ? `3px solid ${C.primary}` : '3px solid transparent', marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ✉️ Demandes de contact
+                    {nouvellesDemandes > 0 && (
+                        <span style={{ background: C.primary, color: 'white', borderRadius: '50%', minWidth: '20px', height: '20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', padding: '0 5px' }}>
+                            {nouvellesDemandes}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+                     {vue === 'prestataires' && <>
             {/* Filtres */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 {[
@@ -260,7 +296,43 @@ export default function AdminDashboard() {
                                 <span style={{ color: '#ccc', fontSize: '18px', flexShrink: 0 }}>›</span>
                             </div>
                         );
-                    })}
+                                })}
+                </div>
+            )}
+            </>}
+
+            {vue === 'contact' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {demandes.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '64px 0', color: '#aaa' }}>
+                            <div style={{ fontSize: '64px', marginBottom: '16px' }}>✉️</div>
+                            <p style={{ fontSize: '16px', color: C.brown, fontWeight: '600' }}>Aucune demande de contact</p>
+                        </div>
+                    ) : demandes.map(d => (
+                        <div key={d.id} style={{ background: 'white', borderRadius: '16px', padding: '18px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: d.statut === 'nouvelle' ? `1.5px solid ${C.primary}` : 'none' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                                <div>
+                                    <p style={{ fontWeight: '700', color: C.brown, fontSize: '15px', margin: '0 0 2px' }}>
+                                        {d.objet}
+                                        <span style={{ background: '#FFF0EE', color: C.primary, padding: '2px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', marginLeft: '10px' }}>{d.type}</span>
+                                    </p>
+                                    <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>{d.nom} • {d.email}</p>
+                                </div>
+                                {d.statut === 'nouvelle' ? (
+                                    <span style={{ background: C.primary, color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>Nouvelle</span>
+                                ) : (
+                                    <span style={{ background: '#E8F5E9', color: '#2e7d32', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>✅ Traitée</span>
+                                )}
+                            </div>
+                            <p style={{ color: '#555', fontSize: '14px', margin: '0 0 12px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{d.message}</p>
+                            {d.statut === 'nouvelle' && (
+                                <button onClick={() => marquerTraitee(d.id)}
+                                    style={{ background: '#E8F5E9', color: '#2e7d32', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}>
+                                    ✓ Marquer comme traitée
+                                </button>
+                            )}
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

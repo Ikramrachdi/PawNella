@@ -17,7 +17,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AvisController;
-
+Route::post('/contact', [\App\Http\Controllers\DemandeContactController::class, 'store']);
 // ============================
 // ROUTES PUBLIQUES (sans connexion)
 // ============================
@@ -43,6 +43,8 @@ Route::post('/upload-multiple', [UploadController::class, 'uploadMultiple']);
 // ROUTES PROTÉGÉES (connexion requise)
 // ============================
 Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/contact', [\App\Http\Controllers\DemandeContactController::class, 'index']);
+    Route::put('/contact/{demande}', [\App\Http\Controllers\DemandeContactController::class, 'update']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::put('/me', [AuthController::class, 'update']);
