@@ -6,7 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BienvenueMail;
 class AuthController extends Controller
 {
     public function register(Request $request) {
@@ -63,6 +64,14 @@ class AuthController extends Controller
             'review_reason' => $request->review_reason,
             'statut_validation' => $request->statut_validation ?? ($request->role === 'prestataire' ? 'en_attente' : 'valide'),
         ]);
+
+        $token = $user->createToken('pawnella')->plainTextToken;
+               // Envoi de l'email de bienvenue (sans bloquer l'inscription si ça échoue)
+        try {
+            Mail::to($user->email)->send(new BienvenueMail($user));
+        } catch (\Exception $e) {
+            \Log::error('Erreur envoi email bienvenue : ' . $e->getMessage());
+        }
 
         $token = $user->createToken('pawnella')->plainTextToken;
 
