@@ -115,8 +115,7 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
 
             {/* NAVBAR */}
             <nav className="landing-nav" style={{background: 'white', padding: '12px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 1px 10px rgba(0,0,0,0.08)', position: 'sticky', top: 0, zIndex: 100}}>
-                <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" className="landing-logo" style={{height: '50px'}}/>
-                <div className="landing-nav-links" style={{display: 'flex', gap: '32px'}}>
+<img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" className="landing-logo" style={{height: '70px'}}/>                <div className="landing-nav-links" style={{display: 'flex', gap: '32px'}}>
                                       {[
                                                  {id: 'accueil', label: 'Accueil'},
                         {id: 'services', label: 'Services'},
@@ -374,9 +373,9 @@ export default function Home({ onLogin, onRegister, startPendingBooking }) {
             <footer style={{background: C.brown, padding: '40px', color: 'white'}}>
                 <div className="landing-footer-row" style={{maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px'}}>
                     <div>
-                        <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '40px', marginBottom: '8px'}}/>
-                        <p style={{color: '#f5c5b5', fontSize: '13px'}}>Pour leur bonheur, pour notre amour.</p>
-                    </div>
+<div style={{background: 'white', borderRadius: '12px', padding: '8px 12px', display: 'inline-block', marginBottom: '8px'}}>
+                            <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '45px', display: 'block'}}/>
+                        </div>                    </div>
                                       <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'}}>
                         <p style={{color: '#f5c5b5', fontSize: '14px', fontWeight: '600', margin: 0}}>Trouvez-nous sur</p>
                         <div style={{display: 'flex', gap: '16px'}}>

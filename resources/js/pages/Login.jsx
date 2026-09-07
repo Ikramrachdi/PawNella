@@ -24,9 +24,7 @@ export default function Login({ onSwitch, onHome }) {
         <div style={{minHeight: '100vh', background: '#fdf5f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(232,117,106,0.15)', padding: '40px', width: '100%', maxWidth: '420px'}}>
                 <div style={{textAlign: 'center', marginBottom: '32px'}}>
-                    <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '80px', marginBottom: '8px'}}/>
-                    <p style={{color: '#888'}}>Connectez-vous à votre compte</p>
-                </div>
+<img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '120px', marginBottom: '8px', display: 'block', margin: '0 auto 8px'}}/>                </div>
 
                 {error && (
                     <div style={{background: '#fce4d6', color: '#e8756a', padding: '12px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px'}}>
