@@ -447,7 +447,7 @@ export default function Dashboard({ pendingBooking, clearPendingBooking }) {
             <div className="dashboard-layout">
                 <aside className="sidebar">
                     <div style={{padding: '20px', borderBottom: '1px solid #f5f5f5'}}>
-                        <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '45px'}}/>
+                        <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '60px'}}/>
                     </div>
                     <div style={{padding: '12px', flex: 1, overflowY: 'auto'}}>
                         {menuItems.map(item => (
