@@ -40,7 +40,7 @@ function AppContent() {
         return (
             <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FDF5F0'}}>
                 <div style={{textAlign: 'center'}}>
-                    <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '80px', marginBottom: '16px'}}/>
+                    <img src="/images/logo_PAWNELLA.png" alt="PawNella" style={{height: '80px', marginBottom: '16px'}}/>
                     <p style={{color: '#E8756A', fontSize: '16px', fontWeight: '600'}}>Chargement...</p>
                 </div>
             </div>

@@ -84,7 +84,7 @@ if (!form.ville) errors.ville = 'Ville obligatoire';
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(232,117,106,0.15)', padding: '40px', width: '100%', maxWidth: '500px'}}>
 
                 <div style={{textAlign: 'center', marginBottom: '24px'}}>
-                    <img src="/images/logo_PAWNELLA.jpeg" alt="PawNella" style={{height: '80px', marginBottom: '8px'}}/>
+                    <img src="/images/logo_PAWNELLA.png" alt="PawNella" style={{height: '80px', marginBottom: '8px'}}/>
                     <p style={{color: '#888'}}>Créez votre compte</p>
                 </div>
 

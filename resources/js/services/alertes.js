@@ -9,7 +9,7 @@ export const requestNotificationPermission = async () => {
 };
 
 // Envoyer une notification navigateur
-export const sendBrowserNotif = (title, body, icon = '/images/logo_PAWNELLA.jpeg') => {
+export const sendBrowserNotif = (title, body, icon = '/images/logo_PAWNELLA.png') => {
     if (Notification.permission === 'granted') {
         const notif = new Notification(title, { body, icon });
         notif.onclick = () => window.focus();

@@ -41,7 +41,7 @@ export default function Notifications({ userId }) {
         if (Notification.permission === 'granted') {
             new Notification(title, {
                 body,
-                icon: '/images/logo_PAWNELLA.jpeg',
+                icon: '/images/logo_PAWNELLA.png',
             });
         }
     };
