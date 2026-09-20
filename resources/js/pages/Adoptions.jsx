@@ -11,14 +11,13 @@ const C = {
     beige: '#FDF5F0',
 };
 
-export default function Adoptions({ 
-    
-    pendingBooking, clearPendingBooking }) {
+export default function Adoptions({ pendingBooking, clearPendingBooking }) {
     const { user } = useAuth();
     const { notify, confirmAction } = useNotification();
     const [annonces, setAnnonces] = useState([]);
     const [animals, setAnimals] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [selectedAnnonce, setSelectedAnnonce] = useState(null);
     const [filter, setFilter] = useState('Tous');
     const [loading, setLoading] = useState(false);
@@ -31,7 +30,6 @@ export default function Adoptions({
         fetchAnimals();
     }, []);
 
-    // Reprise après connexion : ouvre directement l'annonce que le visiteur voulait voir
     useEffect(() => {
         if (pendingBooking?.type === 'adoption' && pendingBooking.annonceId && annonces.length > 0) {
             const annonce = annonces.find(a => a.id === pendingBooking.annonceId);
@@ -54,10 +52,52 @@ export default function Adoptions({
         } catch (err) { console.error(err); }
     };
 
-const handleSubmit = async (e) => {
+    const estProprietaire = (annonce) => {
+        if (!user || !annonce) return false;
+        const proprioId = annonce.user_id || annonce.proprietaire?.id || annonce.user?.id;
+        return proprioId === user.id;
+    };
+
+    const ouvrirNouvelleAnnonce = () => {
+        setEditingId(null);
+        setForm({ animal_id: '', description: '', ville: '', statut: 'active', photos: [] });
+        setShowForm(!showForm);
+    };
+
+    const handleEdit = (annonce) => {
+        setForm({
+            animal_id: annonce.animal_id || annonce.animal?.id || '',
+            description: annonce.description || '',
+            ville: annonce.ville || '',
+            statut: annonce.statut || 'active',
+            photos: annonce.photos || [],
+        });
+        setEditingId(annonce.id);
+        setSelectedAnnonce(null);
+        setShowForm(true);
+        window.scrollTo(0, 0);
+    };
+
+    const handleDelete = async (annonce) => {
+        const ok = await confirmAction(
+            `Supprimer l'annonce de ${annonce.animal?.nom || 'cet animal'} ? Cette action est irréversible.`,
+            { title: '🗑️ Supprimer', confirmLabel: 'Supprimer', cancelLabel: 'Annuler' }
+        );
+        if (!ok) return;
+        try {
+            await api.delete(`/annonces/${annonce.id}`);
+            notify.success('Annonce supprimée');
+            setSelectedAnnonce(null);
+            fetchAnnonces();
+        } catch (err) {
+            console.error(err);
+            notify.error('Erreur lors de la suppression');
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validations
         if (!form.animal_id) {
             notify.error('Veuillez choisir un animal');
             return;
@@ -77,32 +117,36 @@ const handleSubmit = async (e) => {
 
         setLoading(true);
         try {
-            await api.post('/annonces', form);
-            notify.success('Annonce publiée avec succès !');
+            if (editingId) {
+                await api.put(`/annonces/${editingId}`, form);
+                notify.success('Annonce modifiée avec succès !');
+            } else {
+                await api.post('/annonces', form);
+                notify.success('Annonce publiée avec succès !');
+            }
             setShowForm(false);
+            setEditingId(null);
             setForm({ animal_id: '', description: '', ville: '', statut: 'active', photos: [] });
             fetchAnnonces();
         } catch (err) {
             console.error(err);
-            notify.error('Erreur lors de la publication de l\'annonce');
+            notify.error(editingId ? 'Erreur lors de la modification' : 'Erreur lors de la publication de l\'annonce');
         }
         setLoading(false);
     };
 
-   const handleContacter = async (annonce) => {
+    const handleContacter = async (annonce) => {
         const proprio = annonce.proprietaire || annonce.user;
         if (!proprio?.id) {
             alert('Impossible de contacter le propriétaire');
             return;
         }
-
-        // Confirmation avant d'envoyer le message
-                const confirmer = await confirmAction(
+        const confirmer = await confirmAction(
             `Envoyer un message au propriétaire de ${annonce.animal?.nom || 'cet animal'} pour manifester votre intérêt ?`,
             { title: '❤️ Adoption', confirmLabel: 'Envoyer', cancelLabel: 'Annuler' }
         );
         if (!confirmer) return;
-              try {
+        try {
             await api.post('/messages', {
                 destinataire_id: proprio.id,
                 contenu: `Bonjour ! Je suis intéressé(e) par l'adoption de ${annonce.animal?.nom}. Pouvez-vous me donner plus d'informations ? 🐾`
@@ -112,8 +156,9 @@ const handleSubmit = async (e) => {
             alert('❌ Erreur lors de l\'envoi du message');
         }
     };
+
     const filters = ['Tous', 'Chats', 'Chiens', 'Autres'];
-           const filteredAnnonces = annonces.filter(a => {
+    const filteredAnnonces = annonces.filter(a => {
         if (a.statut !== 'active') return false;
         if (filter === 'Tous') return true;
         if (filter === 'Chats') return a.animal?.espece === 'chat';
@@ -121,7 +166,6 @@ const handleSubmit = async (e) => {
         return a.animal?.espece !== 'chat' && a.animal?.espece !== 'chien';
     });
 
-    // Tri : les annonces de la ville de l'utilisateur d'abord, puis les autres
     const villeUser = (user?.ville || '').toLowerCase().trim();
     filteredAnnonces.sort((a, b) => {
         const aProche = (a.ville || '').toLowerCase().trim() === villeUser ? 0 : 1;
@@ -148,6 +192,7 @@ const handleSubmit = async (e) => {
         const animal = selectedAnnonce.animal;
         const proprio = selectedAnnonce.proprietaire || selectedAnnonce.user;
         const photos = selectedAnnonce.photos || [];
+        const isOwner = estProprietaire(selectedAnnonce);
 
         return (
             <div style={{padding: '24px'}}>
@@ -228,8 +273,10 @@ const handleSubmit = async (e) => {
                         <div style={{background: C.beige, borderRadius: '16px', padding: '16px', marginBottom: '20px'}}>
                             <h3 style={{color: C.brown, fontWeight: '700', marginBottom: '12px', fontSize: '15px'}}>👤 Propriétaire</h3>
                             <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                                <div style={{width: '50px', height: '50px', borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '18px', flexShrink: 0}}>
-                                    {proprio?.prenom?.[0] || '?'}
+                                <div style={{width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '18px', flexShrink: 0}}>
+                                    {(proprio?.photo || proprio?.selfie) ? (
+                                        <img src={proprio.photo || proprio.selfie} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}}/>
+                                    ) : (proprio?.prenom?.[0] || '?')}
                                 </div>
                                 <div>
                                     <p style={{fontWeight: '700', color: C.brown, margin: '0 0 4px'}}>{proprio?.prenom} {proprio?.nom}</p>
@@ -240,10 +287,23 @@ const handleSubmit = async (e) => {
                             </div>
                         </div>
 
-                        <button onClick={() => handleContacter(selectedAnnonce)}
-                            style={{width: '100%', background: C.primary, color: 'white', border: 'none', padding: '16px', borderRadius: '14px', fontWeight: '700', fontSize: '16px', cursor: 'pointer'}}>
-                            ❤️ Je suis intéressé — Contacter le propriétaire
-                        </button>
+                        {isOwner ? (
+                            <div style={{display: 'flex', gap: '12px'}}>
+                                <button onClick={() => handleEdit(selectedAnnonce)}
+                                    style={{flex: 1, background: C.beige, color: C.brown, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer'}}>
+                                    ✏️ Modifier
+                                </button>
+                                <button onClick={() => handleDelete(selectedAnnonce)}
+                                    style={{flex: 1, background: '#FFF0EE', color: C.primary, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer'}}>
+                                    🗑️ Supprimer
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => handleContacter(selectedAnnonce)}
+                                style={{width: '100%', background: C.primary, color: 'white', border: 'none', padding: '16px', borderRadius: '14px', fontWeight: '700', fontSize: '16px', cursor: 'pointer'}}>
+                                ❤️ Je suis intéressé — Contacter le propriétaire
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -257,7 +317,7 @@ const handleSubmit = async (e) => {
                     <h2 style={{fontSize: '24px', fontWeight: '800', color: C.brown, margin: '0 0 4px'}}>Adoption</h2>
                     <p style={{color: '#888', fontSize: '14px', margin: 0}}>À la recherche d'un compagnon pour la vie ? 🐾</p>
                 </div>
-                <button onClick={() => setShowForm(!showForm)} style={{background: C.primary, color: 'white', border: 'none', padding: '12px 20px', borderRadius: '14px', cursor: 'pointer', fontWeight: '700', fontSize: '14px'}}>
+                <button onClick={ouvrirNouvelleAnnonce} style={{background: C.primary, color: 'white', border: 'none', padding: '12px 20px', borderRadius: '14px', cursor: 'pointer', fontWeight: '700', fontSize: '14px'}}>
                     + Publier une annonce
                 </button>
             </div>
@@ -283,7 +343,9 @@ const handleSubmit = async (e) => {
 
             {showForm && (
                 <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: '24px', marginBottom: '24px'}}>
-                    <h3 style={{fontSize: '18px', fontWeight: '700', color: C.brown, marginBottom: '20px'}}>Nouvelle annonce d'adoption</h3>
+                    <h3 style={{fontSize: '18px', fontWeight: '700', color: C.brown, marginBottom: '20px'}}>
+                        {editingId ? '✏️ Modifier l\'annonce' : 'Nouvelle annonce d\'adoption'}
+                    </h3>
                     <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
                         <div>
                             <label style={{display: 'block', fontSize: '14px', fontWeight: '600', color: C.brown, marginBottom: '8px'}}>Animal *</label>
@@ -312,12 +374,17 @@ const handleSubmit = async (e) => {
                                 maxPhotos={6}
                                 onUpload={(urls) => setForm({...form, photos: urls})}
                             />
+                            {editingId && form.photos.length > 0 && (
+                                <p style={{color: '#888', fontSize: '12px', margin: '8px 0 0'}}>
+                                    {form.photos.length} photo(s) actuelle(s). Ajoutez-en de nouvelles pour les remplacer.
+                                </p>
+                            )}
                         </div>
                         <div style={{display: 'flex', gap: '12px'}}>
                             <button type="submit" disabled={loading} style={{flex: 1, background: C.primary, color: 'white', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', opacity: loading ? 0.7 : 1}}>
-                                {loading ? 'Publication...' : 'Publier'}
+                                {loading ? (editingId ? 'Modification...' : 'Publication...') : (editingId ? 'Enregistrer' : 'Publier')}
                             </button>
-                            <button type="button" onClick={() => setShowForm(false)} style={{flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: 'pointer'}}>
+                            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} style={{flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: 'pointer'}}>
                                 Annuler
                             </button>
                         </div>
@@ -333,7 +400,9 @@ const handleSubmit = async (e) => {
                 </div>
             ) : (
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px'}}>
-                    {filteredAnnonces.map(annonce => (
+                    {filteredAnnonces.map(annonce => {
+                        const owner = estProprietaire(annonce);
+                        return (
                         <div key={annonce.id} onClick={() => setSelectedAnnonce(annonce)}
                             style={{background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'transform 0.2s'}}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
@@ -345,59 +414,50 @@ const handleSubmit = async (e) => {
                                 ) : (
                                     <div style={{fontSize: '80px'}}>{getIcon(annonce.animal?.espece)}</div>
                                 )}
-                                <button onClick={(e) => e.stopPropagation()} style={{position: 'absolute', top: '12px', right: '12px', background: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: '18px'}}>
-                                    🤍
-                                </button>
+                                {owner && (
+                                    <span style={{position: 'absolute', top: '12px', left: '12px', background: C.brown, color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700'}}>
+                                        Mon annonce
+                                    </span>
+                                )}
                             </div>
 
                             <div style={{padding: '16px'}}>
-                                                              <h3 style={{fontWeight: '700', fontSize: '18px', color: C.brown, margin: '0 0 4px'}}>{annonce.animal?.nom || 'Animal'}</h3>
+                                <h3 style={{fontWeight: '700', fontSize: '18px', color: C.brown, margin: '0 0 4px'}}>{annonce.animal?.nom || 'Animal'}</h3>
                                 {annonce.ville && (annonce.ville || '').toLowerCase().trim() === villeUser && (
                                     <span style={{display: 'inline-block', background: '#E8F5E9', color: '#2e7d32', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', marginBottom: '6px'}}>📍 Près de chez vous</span>
                                 )}
                                 <p style={{color: '#888', fontSize: '13px', margin: '0 0 8px', textTransform: 'capitalize'}}>{annonce.animal?.espece} • {annonce.animal?.race}</p>
 
-                                <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px'}}>
-                                    {annonce.animal?.sexe && (
-                                        <span style={{background: '#FFF0EE', color: C.primary, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600'}}>
-                                            {annonce.animal.sexe === 'male' ? '♂️ Mâle' : '♀️ Femelle'}
-                                        </span>
-                                    )}
-                                    {annonce.animal?.caractere && (
-                                        <span style={{background: '#E3F2FD', color: '#1565c0', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600'}}>
-                                            {annonce.animal.caractere}
-                                        </span>
-                                    )}
-                                </div>
-
                                 <p style={{color: '#666', fontSize: '13px', lineHeight: '1.5', margin: '0 0 12px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
                                     {annonce.description}
                                 </p>
-
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px', background: C.beige, borderRadius: '10px'}}>
-                                    <div style={{width: '28px', height: '28px', borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '12px', flexShrink: 0}}>
-                                        {(annonce.proprietaire?.prenom || annonce.user?.prenom)?.[0] || '?'}
-                                    </div>
-                                    <div>
-                                        <p style={{fontWeight: '600', color: C.brown, fontSize: '12px', margin: 0}}>
-                                            {annonce.proprietaire?.prenom || annonce.user?.prenom} {annonce.proprietaire?.nom || annonce.user?.nom}
-                                        </p>
-                                        <p style={{color: '#aaa', fontSize: '11px', margin: 0}}>📍 {annonce.ville}</p>
-                                    </div>
-                                </div>
 
                                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                     <span style={{background: '#E8F5E9', color: '#2e7d32', padding: '4px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '600'}}>
                                         ✅ {annonce.statut}
                                     </span>
-                                    <button onClick={(e) => { e.stopPropagation(); handleContacter(annonce); }}
-                                        style={{background: C.primary, color: 'white', border: 'none', padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', fontWeight: '600', fontSize: '12px'}}>
-                                        Je suis intéressé ❤️
-                                    </button>
+                                    {owner ? (
+                                        <div style={{display: 'flex', gap: '6px'}}>
+                                            <button onClick={(e) => { e.stopPropagation(); handleEdit(annonce); }}
+                                                style={{background: C.beige, color: C.brown, border: 'none', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontWeight: '600', fontSize: '12px'}}>
+                                                ✏️
+                                            </button>
+                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(annonce); }}
+                                                style={{background: '#FFF0EE', color: C.primary, border: 'none', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontWeight: '600', fontSize: '12px'}}>
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={(e) => { e.stopPropagation(); handleContacter(annonce); }}
+                                            style={{background: C.primary, color: 'white', border: 'none', padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', fontWeight: '600', fontSize: '12px'}}>
+                                            Je suis intéressé ❤️
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

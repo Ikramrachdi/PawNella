@@ -38,6 +38,13 @@ const DUREE_VIE_MAX = {
     tortue: 150,
     poisson: 30,
     reptile: 40,
+    cheval: 40,
+    vache: 25,
+    taureau: 25,
+    boeuf: 25,
+    mouton: 20,
+    chevre: 20,
+    dromadaire: 50,
     autre: 50,
 };
 
@@ -52,6 +59,12 @@ const ESPECES = [
     { value: 'poisson', label: '🐠 Poisson' },
     { value: 'reptile', label: '🦎 Reptile' },
     { value: 'cheval', label: '🐴 Cheval' },
+    { value: 'vache', label: '🐄 Vache' },
+    { value: 'taureau', label: '🐂 Taureau' },
+    { value: 'boeuf', label: '🐃 Bœuf' },
+    { value: 'mouton', label: '🐑 Mouton' },
+    { value: 'chevre', label: '🐐 Chèvre' },
+    { value: 'dromadaire', label: '🐪 Dromadaire' },
     { value: 'autre', label: '🐾 Autre' },
 ];
 
@@ -65,11 +78,17 @@ const RACES_PAR_ESPECE = {
     cochon_dinde: ['Américain', 'Abyssin', 'Péruvien', 'Rex', 'Sheltie'],
     tortue: ['Hermann', 'Grecque', 'De Floride', 'Léopard', 'Sillonnée'],
     poisson: ['Poisson rouge', 'Betta', 'Guppy', 'Molly', 'Néon', 'Scalaire', 'Koï'],
-       reptile: ['Gecko', 'Iguane', 'Pogona', 'Serpent des blés', 'Caméléon', 'Python royal'],
+    reptile: ['Gecko', 'Iguane', 'Pogona', 'Serpent des blés', 'Caméléon', 'Python royal'],
     rongeur: ['Hamster doré / Syrien', 'Hamster russe', 'Hamster Roborovski', 'Cochon d\'Inde', 'Lapin nain', 'Lapin bélier', 'Souris', 'Rat domestique', 'Gerbille', 'Chinchilla', 'Octodon'],
+    cheval: ['Barbe', 'Arabe-Barbe', 'Pur-sang Arabe', 'Pur-sang Anglais', 'Selle Français', 'Poney', 'Croisé'],
+    vache: ['Holstein', 'Montbéliarde', 'Oulmès-Zaër', 'Tidili', 'Brune de l\'Atlas', 'Croisée'],
+    taureau: ['Holstein', 'Montbéliarde', 'Oulmès-Zaër', 'Tidili', 'Brune de l\'Atlas', 'Croisé'],
+    boeuf: ['Holstein', 'Montbéliarde', 'Oulmès-Zaër', 'Tidili', 'Brune de l\'Atlas', 'Croisé'],
+    mouton: ['Sardi', 'Timahdite', 'Beni Guil', 'D\'man', 'Boujaâd', 'Croisé'],
+    chevre: ['Alpine', 'Draâ', 'Noire de l\'Atlas', 'Barcha', 'Croisée'],
+    dromadaire: ['Marmouri', 'Khouar', 'Sahraoui', 'Croisé'],
     autre: [],
 };
-
 // Types de justificatifs acceptés
 const TYPES_PREUVE = [
     { value: 'carnet_vaccination', label: '💉 Carnet de vaccination' },

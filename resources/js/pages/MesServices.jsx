@@ -38,11 +38,16 @@ const ESPECES = [
     { value: 'chien', label: 'Chien', icon: '🐕' },
     { value: 'chat', label: 'Chat', icon: '🐈' },
     { value: 'oiseau', label: 'Oiseau', icon: '🐦' },
+    { value: 'lapin', label: 'Lapin', icon: '🐰' },
+    { value: 'poisson', label: 'Poisson', icon: '🐠' },
     { value: 'reptile', label: 'Reptile', icon: '🦎' },
     { value: 'rongeur', label: 'Rongeur', icon: '🐹' },
+    { value: 'cheval', label: 'Cheval', icon: '🐴' },
+    { value: 'vache', label: 'Vache', icon: '🐄' },
+    { value: 'mouton', label: 'Mouton', icon: '🐑' },
+    { value: 'dromadaire', label: 'Dromadaire', icon: '🐪' },
     { value: 'autre', label: 'Autre', icon: '🐾' },
 ];
-
 export default function MesServices() {
     const [services, setServices] = useState([]);
     const [showForm, setShowForm] = useState(false);

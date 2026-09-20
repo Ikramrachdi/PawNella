@@ -466,8 +466,12 @@ export default function Dashboard({ pendingBooking, clearPendingBooking }) {
                     </div>
                     <div style={{padding: '16px', borderTop: '1px solid #f5f5f5'}}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px'}}>
-                            <div style={{width: '36px', height: '36px', borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>
-                                {user?.prenom?.[0]}
+                                                       <div style={{width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '14px'}}>
+                                {(user?.photo || user?.selfie) ? (
+                                    <img src={user.photo || user.selfie} alt="Profil" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                                ) : (
+                                    <>{user?.prenom?.[0]}</>
+                                )}
                             </div>
                             <div>
                                 <p style={{fontWeight: '700', fontSize: '13px', color: C.brown, margin: 0}}>{user?.prenom} {user?.nom}</p>

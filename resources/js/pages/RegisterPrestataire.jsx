@@ -154,7 +154,7 @@ export default function RegisterPrestataire({ onSwitch, onHome }) {
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(232,117,106,0.15)', padding: '40px', width: '100%', maxWidth: '520px'}}>
 
                 <div style={{textAlign: 'center', marginBottom: '24px'}}>
-                    <img src="/images/logo_PAWNELLA.png" alt="PawNella" style={{height: '70px', marginBottom: '8px'}}/>
+                                        <img src="/images/logo_PAWNELLA.png" alt="PawNella" style={{height: '70px', display: 'block', margin: '0 auto 8px auto'}}/>
                     <h2 style={{color: C.brown, fontWeight: '800', fontSize: '18px', margin: '0 0 4px'}}>Proposer un service</h2>
                     <p style={{color: '#888', fontSize: '13px', margin: 0}}>Rejoignez notre communauté de prestataires</p>
                 </div>

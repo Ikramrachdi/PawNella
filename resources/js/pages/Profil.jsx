@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { validatePhone, validateEmail } from '../utils/validation';
 import { ErrorBanner, FieldError, FieldSuccess, fieldBorder } from '../components/FormError';
+import PhotoUpload from '../components/PhotoUpload';
 
 
 const C = {
@@ -15,6 +16,7 @@ export default function Profil({ onNavigate }) {
     const { user, logout, updateUser } = useAuth();
     const [editing, setEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [photoUrl, setPhotoUrl] = useState(user?.photo || '');
     const [showLangue, setShowLangue] = useState(false);
     const [error, setError] = useState('');
     const [touched, setTouched] = useState({});
@@ -27,7 +29,7 @@ export default function Profil({ onNavigate }) {
         biographie: user?.biographie || '',
     });
     const [success, setSuccess] = useState('');
-      const [avisRecus, setAvisRecus] = useState({ avis: [], moyenne: 0, total: 0 });
+    const [avisRecus, setAvisRecus] = useState({ avis: [], moyenne: 0, total: 0 });
     const [avisClientRecus, setAvisClientRecus] = useState({ avis: [], moyenne: 0, total: 0 });
 
     useEffect(() => {
@@ -36,7 +38,6 @@ export default function Profil({ onNavigate }) {
                 .then(res => setAvisRecus(res.data))
                 .catch(err => console.error(err));
         }
-        // Avis reçus en tant que client (notes des prestataires) — pour tout le monde
         api.get('/mes-avis-client')
             .then(res => setAvisClientRecus(res.data))
             .catch(err => console.error(err));
@@ -65,7 +66,7 @@ export default function Profil({ onNavigate }) {
         setError('');
         setLoading(true);
         try {
-            const res = await api.put('/me', form);
+            const res = await api.put('/me', {...form, photo: photoUrl});
             updateUser(res.data);
             setSuccess('Profil mis à jour avec succès !');
             setEditing(false);
@@ -106,7 +107,6 @@ export default function Profil({ onNavigate }) {
                 </div>
             )}
 
-            {/* Popup Langue */}
             {showLangue && (
                 <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <div style={{background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '360px', width: '100%', margin: '20px'}}>
@@ -124,14 +124,16 @@ export default function Profil({ onNavigate }) {
                 </div>
             )}
 
-            {/* Photo & infos */}
             <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px'}}>
                     <div style={{position: 'relative'}}>
-                        <div style={{width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #E8756A, #4A2C24)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '28px'}}>
-                            {user?.prenom?.[0]}{user?.nom?.[0]}
+                        <div style={{width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg, #E8756A, #4A2C24)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '28px'}}>
+                            {(user?.photo || user?.selfie) ? (
+                                <img src={user.photo || user.selfie} alt="Profil" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                            ) : (
+                                <>{user?.prenom?.[0]}{user?.nom?.[0]}</>
+                            )}
                         </div>
-
                     </div>
                     <div>
                         <h3 style={{fontSize: '20px', fontWeight: '800', color: C.brown, margin: '0 0 4px'}}>{user?.prenom} {user?.nom}</h3>
@@ -140,7 +142,7 @@ export default function Profil({ onNavigate }) {
                             {user?.role}
                         </span>
                     </div>
-                    <button onClick={() => { setEditing(!editing); setError(''); setTouched({}); }}
+                    <button onClick={() => { setEditing(!editing); setError(''); setTouched({}); setPhotoUrl(user?.photo || ''); }}
                         style={{marginLeft: 'auto', background: C.beige, border: 'none', borderRadius: '12px', padding: '10px 16px', cursor: 'pointer', color: C.brown, fontWeight: '600', fontSize: '13px'}}>
                         ✏️ Modifier
                     </button>
@@ -150,6 +152,15 @@ export default function Profil({ onNavigate }) {
 
                 {editing ? (
                     <form onSubmit={handleSubmit} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px'}}>
+                        <div style={{gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '16px'}}>
+                            {photoUrl && (
+                                <img src={photoUrl} alt="Profil" style={{width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.primary}`}} />
+                            )}
+                            <div style={{flex: 1}}>
+                                <label style={{display: 'block', fontSize: '13px', fontWeight: '600', color: C.brown, marginBottom: '6px'}}>Photo de profil</label>
+                                <PhotoUpload label="Photo" multiple={false} onUpload={(url) => setPhotoUrl(url)} />
+                            </div>
+                        </div>
                         <div>
                             <label style={{display: 'block', fontSize: '13px', fontWeight: '600', color: C.brown, marginBottom: '6px'}}>Nom *</label>
                             <input type="text" value={form.nom}
@@ -225,9 +236,7 @@ export default function Profil({ onNavigate }) {
                     </div>
                 )}
             </div>
-            {/* Mes avis reçus (prestataire uniquement) */}
             {user?.role === 'prestataire' && (
-                
                 <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
                         <h3 style={{fontSize: '18px', fontWeight: '800', color: C.brown, margin: 0}}>⭐ Mes avis reçus</h3>
@@ -239,7 +248,6 @@ export default function Profil({ onNavigate }) {
                             </div>
                         )}
                     </div>
-
                     {avisRecus.total === 0 ? (
                         <div style={{textAlign: 'center', padding: '24px', color: '#aaa'}}>
                             <div style={{fontSize: '40px', marginBottom: '8px'}}>⭐</div>
@@ -269,7 +277,6 @@ export default function Profil({ onNavigate }) {
                     )}
                 </div>
             )}
-                        {/* Avis reçus en tant que client (notes des prestataires) */}
             {avisClientRecus.total > 0 && (
                 <div style={{background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: '16px'}}>
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
@@ -302,7 +309,6 @@ export default function Profil({ onNavigate }) {
                     </div>
                 </div>
             )}
-            {/* Menu options */}
             <div style={{background: 'white', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', overflow: 'hidden', marginBottom: '16px'}}>
                 {menuItems.map((item, i) => (
                     <div key={i}
